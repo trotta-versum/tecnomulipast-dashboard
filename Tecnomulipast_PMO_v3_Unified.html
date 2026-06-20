@@ -1,0 +1,1883 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>TECNOMULIPAST · PMO Governance Platform · v3 Unified</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+/*
+══════════════════════════════════════════════════════════════
+  TECNOMULIPAST · PMO Governance Platform · v3 Unified
+  Struttura informativa:
+  § 0  Cover + Executive KPI strip
+  § 1  Executive Summary + Stato progetto
+  § 2  LUM/TMP Focus — risorse, costi, avanzamento (PRIORITÀ 1)
+  § 3  Project Roadmap — Gantt + Milestone + Deliverable
+  § 4  Obiettivi RI/SS + OR1/OR2/OR3
+  § 5  Forecast & Scenari
+  § 6  Stakeholder & Attori esterni  (PRIORITÀ 2)
+  § 7  Piano Pagamenti & Cashflow
+  § 8  Cella Robotica & JERP Integration (collassabile)
+  § 9  KPI Qualità Saldatura (collassabile)
+  §10  Appendice — Dati estesi, Modello TO-BE, KG (collassabile)
+
+  Design System: Montserrat · Palette istituzionale v1
+  Accordion · Tab · Year filter · Toggle Sintesi/Dettaglio
+══════════════════════════════════════════════════════════════
+*/
+
+/* ── DESIGN TOKENS (da v1 — identici) ── */
+:root{
+  --navy:#0d1f2d;--navy2:#1b3a52;
+  --ri:#1a5276;--ri2:#2874a6;--ri-lt:rgba(26,82,118,.08);--ri-ltr:rgba(26,82,118,.18);
+  --ss:#7d3c00;--ss2:#c0602a;--ss-lt:rgba(192,96,42,.08);--ss-ltr:rgba(192,96,42,.2);
+  --weld:#b5451b;--weld2:#e8601c;--weld-lt:rgba(232,96,28,.1);
+  --iot:#0e7c7b;--iot2:#18a39f;--iot-lt:rgba(14,124,123,.08);
+  --green:#1a6e3a;--green-lt:#e6f4ec;
+  --red:#8b1a1a;--red-lt:#fdf0f0;
+  --amber:#c47a00;--amber-lt:#fef9ee;
+  --purple:#5b2d8e;--purple-lt:#f0eafa;
+  --ink:#1a1a18;--ink2:#3a3a38;--ink3:#6a6a66;--ink4:#aaaaaa;
+  --paper:#f4f7f9;--warm:#edf2f4;--border:#dde2e6;--border2:#c8ced4;
+  --sans:'Montserrat',sans-serif;--mono:'JetBrains Mono',monospace;
+  --r:3px;--r2:6px;--r3:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);font-size:13px;line-height:1.65;-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--warm);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+/* ── COVER ── */
+.cover{
+  background:linear-gradient(135deg,#060e16 0%,#0d1f2d 38%,#1a3a52 70%,#1e2d1e 100%);
+  color:#fff;padding:48px 64px 40px;position:relative;overflow:hidden;
+}
+.cover::before{content:"";position:absolute;inset:0;
+  background:radial-gradient(ellipse at 80% 10%,rgba(232,96,28,.18) 0%,transparent 50%),
+             radial-gradient(ellipse at 5% 85%,rgba(14,124,123,.12) 0%,transparent 45%);}
+.cover::after{content:"";position:absolute;right:0;top:0;bottom:0;width:4px;
+  background:linear-gradient(180deg,var(--weld2) 0%,var(--iot2) 100%);}
+.c-inner{position:relative;z-index:1;display:grid;grid-template-columns:1fr auto;gap:40px;align-items:start;}
+.c-badge{font-size:9px;font-weight:800;letter-spacing:.28em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:16px;}
+.c-badge span{color:#f4a261;}
+.c-title{font-size:clamp(24px,3.5vw,44px);font-weight:900;line-height:1.05;margin-bottom:6px;}
+.c-title em{font-style:normal;color:#f4a261;}
+.c-title em.t{color:#52d9d6;}
+.c-sub{font-size:12px;color:rgba(255,255,255,.5);max-width:600px;line-height:1.7;}
+.c-meta{margin-top:20px;display:flex;gap:16px;flex-wrap:wrap;}
+.c-tag{font-size:9px;font-weight:700;letter-spacing:.1em;padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);}
+.c-kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;min-width:240px;}
+.ck{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:var(--r2);padding:14px;}
+.ck-v{font-size:clamp(16px,2vw,22px);font-weight:700;color:#fff;display:block;}
+.ck-l{font-size:8px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:3px;display:block;}
+.c-foot{grid-column:1/-1;margin-top:24px;display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.3);font-weight:600;}
+
+/* ── STICKY NAV ── */
+nav{
+  position:sticky;top:0;z-index:400;background:rgba(244,247,249,.97);
+  backdrop-filter:blur(16px);border-bottom:2px solid var(--border);
+  padding:0 40px;display:flex;align-items:center;height:48px;gap:0;
+}
+.n-brand{font-size:10px;font-weight:900;color:var(--navy);margin-right:20px;flex-shrink:0;letter-spacing:.05em;white-space:nowrap;}
+.n-divider{width:1px;height:20px;background:var(--border);margin-right:8px;flex-shrink:0;}
+.n-links{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;flex:1;}
+.n-links::-webkit-scrollbar{display:none;}
+.n-lk{font-size:9px;font-weight:700;letter-spacing:.05em;color:var(--ink3);
+  padding:0 10px;height:48px;display:flex;align-items:center;
+  border-bottom:2px solid transparent;text-decoration:none;white-space:nowrap;transition:.15s;}
+.n-lk:hover{color:var(--ri);}
+.n-lk.a{color:var(--ri);border-bottom-color:var(--ri);}
+.n-lk.pri{color:var(--ri);}
+.n-lk.pri.a{border-bottom-color:var(--ri);}
+.n-lk.sec{color:var(--ink4);}
+.n-lk.sec.a{color:var(--iot);border-bottom-color:var(--iot);}
+.n-actions{display:flex;gap:8px;margin-left:auto;flex-shrink:0;}
+.nbtn{height:28px;padding:0 12px;border-radius:var(--r);border:1px solid var(--border);
+  font-family:var(--sans);font-size:9px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;transition:.15s;}
+.nbtn-primary{background:var(--navy);color:#fff;border-color:var(--navy);}
+.nbtn-ghost{background:transparent;color:var(--ink3);}
+.nbtn-ghost:hover{background:var(--warm);color:var(--ink);}
+
+/* ── SECTION LAYOUT ── */
+.sec{max-width:1160px;margin:0 auto;padding:36px 48px;}
+.sec+.sec{border-top:1px solid var(--border);}
+/* Zone colors */
+.sec.pmo-zone{background:rgba(26,82,118,.02);border-top:3px solid var(--ri);}
+.sec.weld-zone{background:rgba(181,69,27,.02);border-top:3px solid var(--weld);}
+.sec.iot-zone{background:rgba(14,124,123,.02);border-top:3px solid var(--iot);}
+.sec.fore-zone{background:rgba(91,45,142,.03);border-top:3px solid var(--purple);}
+.sec.science-zone{background:rgba(26,110,58,.02);border-top:3px solid var(--green);}
+.sec.neutral-zone{background:rgba(255,255,255,.4);border-top:1px solid var(--border);}
+
+/* Section header */
+.sec-hdr{margin-bottom:24px;}
+.eyebrow{font-size:9px;font-weight:900;letter-spacing:.24em;text-transform:uppercase;color:var(--ink4);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.eyebrow::before{content:"";width:16px;height:1px;background:currentColor;}
+.eyebrow.ri{color:var(--ri);}
+.eyebrow.ss{color:var(--ss2);}
+.eyebrow.weld{color:var(--weld);}
+.eyebrow.iot{color:var(--iot);}
+.eyebrow.fc{color:var(--purple);}
+.eyebrow.sc{color:var(--green);}
+.eyebrow.am{color:var(--amber);}
+h2{font-size:clamp(18px,2.4vw,26px);font-weight:700;color:var(--ink);line-height:1.15;margin-bottom:4px;}
+h2 em{font-style:normal;font-weight:900;}
+h2 em.b{color:var(--ri);}
+h2 em.w{color:var(--weld2);}
+h2 em.i{color:var(--iot2);}
+h2 em.p{color:var(--purple);}
+h2 em.g{color:var(--green);}
+h2 em.a{color:var(--amber);}
+.sec-sub{font-size:12px;color:var(--ink3);max-width:820px;line-height:1.75;margin-top:4px;}
+
+/* ── GRIDS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.g6{display:grid;grid-template-columns:repeat(6,1fr);gap:0;background:var(--border);border:1px solid var(--border);margin-bottom:20px;}
+
+/* ── METRIC CHIPS ── */
+.metric{background:var(--paper);padding:14px 16px;}
+.mv{font-size:clamp(15px,1.8vw,22px);font-weight:700;display:block;margin-bottom:3px;color:var(--ink);}
+.mv.b{color:var(--ri);}
+.mv.w{color:var(--weld2);}
+.mv.i{color:var(--iot2);}
+.mv.gr{color:var(--green);}
+.mv.rd{color:var(--red);}
+.mv.p{color:var(--purple);}
+.mv.am{color:var(--amber);}
+.ml{font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink4);}
+.ms{font-size:10.5px;color:var(--ink3);margin-top:2px;}
+
+/* ── CARD ── */
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;transition:.18s;}
+.card:hover{border-color:var(--border2);box-shadow:0 2px 12px rgba(0,0,0,.05);}
+.card-hd{padding:12px 18px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--warm);}
+.card-title{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);}
+.card-body{padding:18px;}
+.card-body.sm{padding:12px 18px;}
+
+/* ── STATUS BADGE ── */
+.bdg{display:inline-flex;align-items:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.05em;padding:2px 9px;border-radius:20px;}
+.bdg.gr{background:var(--green-lt);color:var(--green);border:1px solid rgba(26,110,58,.2);}
+.bdg.am{background:var(--amber-lt);color:var(--amber);border:1px solid rgba(196,122,0,.2);}
+.bdg.rd{background:var(--red-lt);color:var(--red);border:1px solid rgba(139,26,26,.2);}
+.bdg.b{background:var(--ri-lt);color:var(--ri);border:1px solid rgba(26,82,118,.2);}
+.bdg.ss{background:var(--ss-lt);color:var(--ss2);border:1px solid rgba(192,96,42,.2);}
+.bdg.n{background:var(--warm);color:var(--ink3);border:1px solid var(--border);}
+.bdg.w{background:var(--weld-lt);color:var(--weld);border:1px solid rgba(181,69,27,.2);}
+.bdg.i{background:var(--iot-lt);color:var(--iot);border:1px solid rgba(14,124,123,.2);}
+.bdg.p{background:var(--purple-lt);color:var(--purple);border:1px solid rgba(91,45,142,.2);}
+.bdg::before{content:"●";font-size:6px;}
+
+/* ── PROGRESS BARS ── */
+.pb-row{margin-bottom:8px;}
+.pb-hdr{display:flex;justify-content:space-between;font-size:10.5px;margin-bottom:3px;font-weight:500;color:var(--ink2);}
+.pb-bar{height:6px;border-radius:3px;background:var(--border);overflow:hidden;}
+.pb-fill{height:100%;border-radius:3px;transition:width .7s ease;}
+
+/* ── TABLES ── */
+.tbl{width:100%;border-collapse:collapse;font-size:11.5px;}
+.tbl th{font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink3);border-bottom:2px solid var(--border);padding:8px 12px;text-align:left;background:var(--warm);}
+.tbl td{padding:7px 12px;border-bottom:1px solid var(--border);color:var(--ink);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:var(--warm);}
+.tbl .tot td{font-weight:700;border-top:2px solid var(--border2);background:var(--ri-lt);color:var(--ri);}
+.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-family:var(--mono);}
+
+/* ── CALLOUT ── */
+.call{border-left:3px solid;padding:10px 14px;border-radius:0 var(--r) var(--r) 0;font-size:11.5px;color:var(--ink2);line-height:1.7;margin-bottom:14px;}
+.call.ri{border-color:var(--ri);background:var(--ri-lt);}
+.call.gr{border-color:var(--green);background:var(--green-lt);}
+.call.am{border-color:var(--amber);background:var(--amber-lt);}
+.call.rd{border-color:var(--red);background:var(--red-lt);}
+
+/* ══════════════════════════════════════
+   ACCORDION SYSTEM
+══════════════════════════════════════ */
+.accordion{border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:12px;}
+.acc-trigger{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 20px;background:#fff;cursor:pointer;user-select:none;
+  border:none;width:100%;text-align:left;font-family:var(--sans);
+  transition:background .15s;
+}
+.acc-trigger:hover{background:var(--warm);}
+.acc-trigger.open{background:var(--ri-lt);}
+.acc-trigger.open .acc-title{color:var(--ri);}
+.acc-left{display:flex;align-items:center;gap:12px;}
+.acc-icon{font-size:14px;flex-shrink:0;}
+.acc-title{font-size:12px;font-weight:700;color:var(--ink);}
+.acc-subtitle{font-size:10.5px;color:var(--ink3);margin-top:1px;}
+.acc-right{display:flex;align-items:center;gap:10px;}
+.acc-chevron{font-size:12px;color:var(--ink3);transition:transform .25s;flex-shrink:0;}
+.acc-trigger.open .acc-chevron{transform:rotate(180deg);}
+.acc-body{
+  max-height:0;overflow:hidden;
+  transition:max-height .35s cubic-bezier(.4,0,.2,1);
+  background:var(--paper);border-top:0;
+}
+.acc-body.open{max-height:9999px;border-top:1px solid var(--border);}
+.acc-body-inner{padding:24px;}
+
+/* ══════════════════════════════════════
+   TAB SYSTEM
+══════════════════════════════════════ */
+.tab-wrap{margin-bottom:20px;}
+.tab-hdr{display:flex;border-bottom:2px solid var(--border);gap:0;flex-wrap:wrap;}
+.tab-btn{
+  padding:9px 18px;font-family:var(--sans);font-size:10px;font-weight:700;
+  letter-spacing:.05em;color:var(--ink3);border:none;background:transparent;
+  cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;
+  transition:.15s;white-space:nowrap;
+}
+.tab-btn:hover{color:var(--ri);}
+.tab-btn.active{color:var(--ri);border-bottom-color:var(--ri);}
+.tab-pane{display:none;}
+.tab-pane.active{display:block;}
+
+/* ══════════════════════════════════════
+   TOGGLE SINTESI / DETTAGLIO
+══════════════════════════════════════ */
+.toggle-bar{display:flex;align-items:center;gap:8px;margin-bottom:20px;}
+.toggle-label{font-size:10px;font-weight:700;color:var(--ink3);}
+.toggle-switch{position:relative;width:40px;height:20px;flex-shrink:0;}
+.toggle-switch input{opacity:0;width:0;height:0;}
+.toggle-slider{
+  position:absolute;inset:0;background:var(--border);border-radius:10px;
+  cursor:pointer;transition:.2s;
+}
+.toggle-slider::before{
+  content:"";position:absolute;left:3px;top:3px;width:14px;height:14px;
+  background:#fff;border-radius:50%;transition:.2s;
+}
+.toggle-switch input:checked + .toggle-slider{background:var(--ri);}
+.toggle-switch input:checked + .toggle-slider::before{left:23px;}
+.detail-only{transition:opacity .2s;}
+.detail-only.hidden{display:none;}
+
+/* ══════════════════════════════════════
+   YEAR FILTER
+══════════════════════════════════════ */
+.year-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.year-btn{
+  padding:5px 14px;border-radius:20px;border:1px solid var(--border);
+  font-family:var(--sans);font-size:10px;font-weight:700;
+  color:var(--ink3);background:var(--paper);cursor:pointer;transition:.15s;
+}
+.year-btn:hover{border-color:var(--ri);color:var(--ri);}
+.year-btn.active{background:var(--ri);color:#fff;border-color:var(--ri);}
+
+/* ══════════════════════════════════════
+   HEATMAP RESOURCES
+══════════════════════════════════════ */
+.heatmap{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:16px;}
+.heatmap th{font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);border-bottom:2px solid var(--border);padding:7px 10px;background:var(--warm);}
+.heatmap td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--ink);vertical-align:middle;}
+.heatmap tr:hover td{background:var(--warm);}
+.hc{display:inline-flex;align-items:center;justify-content:center;min-width:58px;height:24px;border-radius:3px;font-size:10px;font-weight:700;font-family:var(--mono);}
+.hc-g{background:rgba(26,110,58,.12);color:var(--green);border:1px solid rgba(26,110,58,.25);}
+.hc-a{background:var(--amber-lt);color:var(--amber);border:1px solid rgba(196,122,0,.25);}
+.hc-n{background:var(--warm);color:var(--ink4);border:1px solid var(--border);}
+.hc-b{background:var(--ri-lt);color:var(--ri);border:1px solid rgba(26,82,118,.2);}
+
+/* ══════════════════════════════════════
+   MILESTONE STREAM
+══════════════════════════════════════ */
+.ms-stream{display:flex;flex-direction:column;}
+.ms-item{display:grid;grid-template-columns:70px 12px 1fr;gap:0 14px;align-items:stretch;}
+.ms-date{font-size:9.5px;font-weight:600;color:var(--ink3);text-align:right;padding:12px 0;}
+.ms-spine{display:flex;flex-direction:column;align-items:center;}
+.ms-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:13px;position:relative;z-index:1;}
+.ms-dot.done{background:var(--green);box-shadow:0 0 0 3px rgba(26,110,58,.15);}
+.ms-dot.wip{background:var(--weld2);box-shadow:0 0 0 3px rgba(232,96,28,.15);animation:pulse-weld 2s infinite;}
+.ms-dot.plan{background:var(--border2);}
+@keyframes pulse-weld{0%,100%{box-shadow:0 0 0 0 rgba(232,96,28,.3);}50%{box-shadow:0 0 0 6px rgba(232,96,28,0);}}
+.ms-line{width:1px;flex:1;background:var(--border);margin:2px 0;}
+.ms-card{padding:10px 14px;border-radius:var(--r);background:#fff;border:1px solid var(--border);margin:6px 0;transition:.15s;}
+.ms-card:hover{border-color:var(--border2);box-shadow:0 1px 6px rgba(0,0,0,.05);}
+.ms-tag{font-size:8px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:3px;}
+.ms-tag.done{color:var(--green);}
+.ms-tag.wip{color:var(--weld2);}
+.ms-tag.plan{color:var(--ink4);}
+.ms-title{font-size:12px;font-weight:700;color:var(--ink);line-height:1.3;}
+.ms-body{font-size:10.5px;color:var(--ink3);margin-top:4px;line-height:1.5;}
+.ms-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px;}
+
+/* ══════════════════════════════════════
+   PAYMENT TABLES
+══════════════════════════════════════ */
+.pay-hdr{padding:10px 16px;font-size:9px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;border-radius:var(--r) var(--r) 0 0;}
+.pay-hdr.jerp{background:var(--ri-lt);color:var(--ri);border:1px solid rgba(26,82,118,.2);}
+.pay-hdr.rnd{background:var(--weld-lt);color:var(--weld);border:1px solid rgba(181,69,27,.2);}
+.pay-hdr.impl{background:var(--green-lt);color:var(--green);border:1px solid rgba(26,110,58,.2);}
+.pay-hdr.lum{background:var(--purple-lt);color:var(--purple);border:1px solid rgba(91,45,142,.2);}
+.pay-row{display:grid;grid-template-columns:90px 110px 110px 110px 1fr;gap:0;padding:7px 16px;font-size:11px;border:1px solid var(--border);border-top:0;align-items:center;}
+.pay-row:last-child{border-radius:0 0 var(--r) var(--r);}
+.pay-row.tot{background:var(--warm);font-weight:700;}
+.pay-row:hover{background:var(--warm);}
+.mono-val{font-family:var(--mono);font-size:11px;}
+.pos{color:var(--green);}
+.neg{color:var(--red);}
+
+/* ══════════════════════════════════════
+   OR CARDS
+══════════════════════════════════════ */
+.or-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;}
+.or-card{border-radius:var(--r2);overflow:hidden;background:#fff;border:1px solid var(--border);}
+.or-card-top{padding:14px 18px 10px;position:relative;}
+.or-card-top::after{content:"";position:absolute;top:0;left:0;right:0;height:3px;}
+.or1 .or-card-top::after{background:var(--ri);}
+.or2 .or-card-top::after{background:var(--weld);}
+.or3 .or-card-top::after{background:var(--green);}
+.or-num{font-size:8.5px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;margin-bottom:4px;}
+.or1 .or-num{color:var(--ri);}
+.or2 .or-num{color:var(--weld);}
+.or3 .or-num{color:var(--green);}
+.or-title{font-size:13px;font-weight:700;color:var(--ink);line-height:1.3;}
+.or-body{padding:10px 18px 14px;}
+.or-item{font-size:11px;color:var(--ink2);padding:4px 0;border-bottom:1px solid var(--border);display:flex;gap:7px;align-items:flex-start;line-height:1.5;}
+.or-item:last-child{border:none;}
+.or-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.or1 .or-dot{background:var(--ri);}
+.or2 .or-dot{background:var(--weld);}
+.or3 .or-dot{background:var(--green);}
+.or-note{margin-top:10px;padding:8px 12px;border-radius:var(--r);font-size:10.5px;line-height:1.6;}
+.or1 .or-note{background:var(--ri-lt);border-left:2px solid var(--ri);color:var(--ink2);}
+.or2 .or-note{background:var(--weld-lt);border-left:2px solid var(--weld);color:var(--ink2);}
+.or3 .or-note{background:var(--green-lt);border-left:2px solid var(--green);color:var(--ink2);}
+
+/* ══════════════════════════════════════
+   STAKEHOLDER CARDS
+══════════════════════════════════════ */
+.sh-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.sh-card{background:#fff;border:1px solid var(--border);border-radius:var(--r2);padding:14px;}
+.sh-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;margin-bottom:9px;}
+.sh-name{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:1px;}
+.sh-role{font-size:10px;color:var(--ink3);margin-bottom:7px;line-height:1.4;}
+.sh-tags{display:flex;flex-wrap:wrap;gap:4px;}
+
+/* ══════════════════════════════════════
+   GANTT (identico a v1)
+══════════════════════════════════════ */
+#ganttWrap{border:1px solid var(--border);border-radius:var(--r);background:#fff;overflow:hidden;margin-bottom:14px;}
+#ganttCanvas{display:block;width:100%;}
+.gantt-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--ink3);margin-bottom:16px;}
+.gl-i{display:flex;align-items:center;gap:5px;}
+.gl-sw{width:18px;height:7px;border-radius:2px;flex-shrink:0;}
+
+/* ══════════════════════════════════════
+   RISK MATRIX
+══════════════════════════════════════ */
+.risk-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.risk-card{border:1px solid;border-radius:var(--r2);padding:12px;position:relative;overflow:hidden;}
+.risk-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:currentColor;opacity:.5;}
+.rhi{border-color:rgba(139,26,26,.3);color:var(--red);background:var(--red-lt);}
+.rme{border-color:rgba(196,122,0,.3);color:var(--amber);background:var(--amber-lt);}
+.rlo{border-color:rgba(26,110,58,.3);color:var(--green);background:var(--green-lt);}
+.r-lbl{font-size:8.5px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;margin-bottom:4px;}
+.r-title{font-size:11.5px;font-weight:700;color:var(--ink);margin-bottom:3px;}
+.r-desc{font-size:10.5px;color:var(--ink3);line-height:1.5;}
+
+/* ══════════════════════════════════════
+   DELIVERABLE LIST
+══════════════════════════════════════ */
+.del-list{list-style:none;padding:0;}
+.del-item{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:11.5px;}
+.del-item:last-child{border:none;}
+.del-icon{font-size:12px;flex-shrink:0;margin-top:1px;}
+.del-code{font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;min-width:48px;margin-top:2px;}
+.del-code.ri{color:var(--ri);}
+.del-code.ss{color:var(--ss2);}
+.del-name{font-weight:600;color:var(--ink);}
+.del-meta{font-size:10px;color:var(--ink3);}
+
+/* ══════════════════════════════════════
+   FORECAST / SLIDER
+══════════════════════════════════════ */
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:var(--border);outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--purple);cursor:pointer;box-shadow:0 0 0 2px #fff,0 0 0 3px var(--purple);}
+.sl-row{margin-bottom:14px;}
+.sl-lbl{display:flex;justify-content:space-between;font-size:11px;font-weight:600;margin-bottom:5px;}
+.sl-out{color:var(--purple);font-weight:700;}
+
+/* ══════════════════════════════════════
+   SCENARIO CARDS
+══════════════════════════════════════ */
+.sc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.sc{border-radius:var(--r2);overflow:hidden;}
+.sc-hd{padding:12px 16px;}
+.sc-lbl{font-size:8px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.65);margin-bottom:3px;}
+.sc-name{font-size:14px;font-weight:800;color:#fff;margin-bottom:2px;}
+.sc-sub{font-size:10px;color:rgba(255,255,255,.7);}
+.sc-bd{padding:12px 16px;background:var(--paper);border:1px solid;border-top:none;border-radius:0 0 var(--r2) var(--r2);}
+.sc-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dotted var(--border);font-size:11px;}
+.sc-row:last-child{border:none;}
+.sc-k{color:var(--ink3);}
+.sc-v{font-weight:700;}
+.sc.cons .sc-hd{background:#4a6fa5;}
+.sc.cons .sc-bd{border-color:#4a6fa5;}
+.sc.real .sc-hd{background:var(--green);}
+.sc.real .sc-bd{border-color:var(--green);}
+.sc.opt .sc-hd{background:var(--weld2);}
+.sc.opt .sc-bd{border-color:var(--weld2);}
+
+/* ══════════════════════════════════════
+   ALERT STRIP
+══════════════════════════════════════ */
+.alert-strip{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:var(--r);border:1px solid;font-size:11.5px;line-height:1.6;margin-bottom:10px;}
+.alert-strip.rd{border-color:var(--red);background:var(--red-lt);}
+.alert-strip.am{border-color:var(--amber);background:var(--amber-lt);}
+.alert-strip.gr{border-color:var(--green);background:var(--green-lt);}
+
+/* ══════════════════════════════════════
+   REVEAL ANIMATION
+══════════════════════════════════════ */
+.rev{opacity:0;transform:translateY(8px);transition:opacity .35s ease,transform .35s ease;}
+.rev.vis{opacity:1;transform:none;}
+
+/* ══════════════════════════════════════
+   KPI WELD (from v1)
+══════════════════════════════════════ */
+.kw-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.kw{background:#fff;border:1px solid var(--border);border-radius:var(--r2);padding:14px;position:relative;overflow:hidden;}
+.kw::after{content:"";position:absolute;top:0;left:0;right:0;height:3px;}
+.kw.volt::after{background:var(--weld2);}
+.kw.amp::after{background:#e8a01c;}
+.kw.arc::after{background:var(--iot2);}
+.kw.qty::after{background:var(--green);}
+.kw.alarm::after{background:var(--red);}
+.kw.cycle::after{background:var(--purple);}
+.kw-name{font-size:8.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:5px;}
+.kw-val{font-size:24px;font-weight:700;line-height:1;}
+.kw-unit{font-size:12px;font-weight:400;color:var(--ink3);margin-left:3px;}
+.kw-range{font-size:10.5px;color:var(--ink3);margin-top:3px;}
+.kw-status{font-size:10px;font-weight:700;margin-top:5px;}
+
+/* ══════════════════════════════════════
+   ENTITY CARDS (from v1)
+══════════════════════════════════════ */
+.entity-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
+.entity-card{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;position:relative;}
+.entity-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:var(--r) 0 0 var(--r);}
+.entity-card.ri::before{background:var(--ri);}
+.entity-card.weld::before{background:var(--weld2);}
+.entity-card.iot::before{background:var(--iot2);}
+.entity-card.green::before{background:var(--green);}
+.ec-label{font-size:8px;font-weight:900;letter-spacing:.15em;text-transform:uppercase;margin-bottom:4px;}
+.ec-label.ri{color:var(--ri);}
+.ec-label.weld{color:var(--weld);}
+.ec-label.iot{color:var(--iot);}
+.ec-label.green{color:var(--green);}
+.ec-title{font-size:11px;font-weight:700;color:var(--ink);margin-bottom:3px;}
+.ec-fields{font-size:10px;color:var(--ink3);line-height:1.5;}
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media(max-width:960px){
+  .sec{padding:24px 20px;}
+  .g2,.g3,.g4{grid-template-columns:1fr;}
+  .g6{grid-template-columns:repeat(3,1fr);}
+  .or-grid{grid-template-columns:1fr;}
+  .sc-grid{grid-template-columns:1fr;}
+  .risk-grid{grid-template-columns:repeat(2,1fr);}
+  .sh-grid{grid-template-columns:repeat(2,1fr);}
+  .entity-grid{grid-template-columns:repeat(2,1fr);}
+  .kw-grid{grid-template-columns:repeat(2,1fr);}
+  .c-inner{grid-template-columns:1fr;}
+  .c-kpis{grid-template-columns:repeat(4,1fr);}
+  nav{padding:0 16px;}
+  .pay-row{grid-template-columns:80px 90px 1fr;}
+}
+@media print{
+  .n-actions,nav button,.accordion .acc-trigger{display:none!important;}
+  .acc-body{max-height:none!important;}
+  body{background:#fff;font-size:11px;}
+  .sec{padding:20px 28px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+  COVER
+══════════════════════════════════════════════════ -->
+<section class="cover">
+<div class="c-inner">
+  <div>
+    <p class="c-badge">PMO Governance Platform · <span>Tecnomulipast S.r.l. · PIA Puglia · G683TK4</span></p>
+    <h1 class="c-title">TECNOMULIPAST<br><em>Dashboard PMO</em> · <em class="t">RI &amp; SS</em></h1>
+    <p class="c-sub">Piattaforma integrata di monitoraggio per il progetto di Innovazione della Saldatura Automatizzata. Cella robotica TECNOROBOT TR4.0 · JERP · OPC-UA · Data Analytics. PIA Puglia Art. 27 Reg. 17/2014.</p>
+    <div class="c-meta">
+      <span class="c-tag">PIA Puglia · G683TK4</span>
+      <span class="c-tag">2021 → 2025 · CHIUSO</span>
+      <span class="c-tag">€80.000 rendicontati</span>
+      <span class="c-tag">TECNOROBOT TR4.0 · OPC-UA</span>
+      <span class="c-tag">RINA Consulting · Partner RI</span>
+    </div>
+  </div>
+  <div class="c-kpis">
+    <div class="ck"><span class="ck-v" style="color:#f4a261">€80.000</span><span class="ck-l">Budget PIA</span></div>
+    <div class="ck"><span class="ck-v" style="color:#52d9d6">CHIUSO</span><span class="ck-l">Stato · Set. 2025</span></div>
+    <div class="ck"><span class="ck-v">6</span><span class="ck-l">Risorse allocate</span></div>
+    <div class="ck"><span class="ck-v">RI+SS</span><span class="ck-l">Mix tipologia</span></div>
+    <div class="ck"><span class="ck-v">10</span><span class="ck-l">Task completati</span></div>
+    <div class="ck"><span class="ck-v">13</span><span class="ck-l">Deliverable</span></div>
+  </div>
+  <div class="c-foot">
+    <span>Gravina in Puglia · ATECO 28.93.00 · Giorgio Giovanni &amp; Donato Laddaga</span>
+    <span>Dashboard v3 Unified · Giugno 2026 · Confidenziale</span>
+  </div>
+</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+  NAV — strutturata per gerarchia: PMO first, tecnico secondo
+══════════════════════════════════════════════════ -->
+<nav id="mainNav">
+  <span class="n-brand">⬡ TMPast · PMO v3</span>
+  <div class="n-divider"></div>
+  <div class="n-links">
+    <a class="n-lk pri a" href="#exec">Executive</a>
+    <a class="n-lk pri" href="#focus-lum">LUM Focus</a>
+    <a class="n-lk pri" href="#risorse">Risorse</a>
+    <a class="n-lk pri" href="#roadmap">Roadmap</a>
+    <a class="n-lk pri" href="#obiettivi">OR1/OR2/OR3</a>
+    <a class="n-lk pri" href="#forecast">Forecast</a>
+    <a class="n-lk sec" href="#stakeholder">Stakeholder</a>
+    <a class="n-lk sec" href="#pagamenti">Pagamenti</a>
+    <a class="n-lk sec" href="#cella-jerp">Cella &amp; JERP</a>
+    <a class="n-lk sec" href="#kpi-qualita">KPI Qualità</a>
+    <a class="n-lk sec" href="#appendice">Appendice</a>
+  </div>
+  <div class="n-actions">
+    <button class="nbtn nbtn-ghost" onclick="toggleAllAccordions()">⊞ Espandi tutto</button>
+    <button class="nbtn nbtn-primary" onclick="window.print()">↓ Stampa PDF</button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════════
+  § 1 · EXECUTIVE SUMMARY
+══════════════════════════════════════════════════ -->
+<section class="sec pmo-zone rev" id="exec">
+  <div class="sec-hdr">
+    <p class="eyebrow ri">§ 1 · Executive Summary</p>
+    <h2>Stato del progetto: <em class="b">100% completato · Set. 2025</em></h2>
+    <p class="sec-sub">Quadro consolidato al closing del progetto PIA. Tutti i dati economici, di avanzamento e di risorse si riferiscono ai valori consuntivati.</p>
+  </div>
+
+  <!-- Alert principale -->
+  <div class="alert-strip gr rev" style="margin-bottom:20px;">
+    <span style="font-size:16px;">✓</span>
+    <div><strong style="color:var(--green)">Progetto CHIUSO — Settembre 2025.</strong> Budget PIA €80.000 interamente rendicontato. 10 task completati, 13 deliverable prodotti, 100% budget assorbito. Chiusura nei termini del programma PIA Puglia.</div>
+  </div>
+
+  <!-- KPI strip principale -->
+  <div class="g6 rev">
+    <div class="metric"><span class="mv gr">100%</span><span class="ml">Budget assorbito</span><p class="ms">€80.000 / €80.000</p></div>
+    <div class="metric"><span class="mv b">RI+SS</span><span class="ml">Tipologia ricerca</span><p class="ms">Ricerca Ind. + Svil. Sper.</p></div>
+    <div class="metric"><span class="mv">5 anni</span><span class="ml">Durata effettiva</span><p class="ms">2021 → 2025</p></div>
+    <div class="metric"><span class="mv b">6</span><span class="ml">Risorse allocate</span><p class="ms">Personale LUM Enterprise</p></div>
+    <div class="metric"><span class="mv gr">10/10</span><span class="ml">Task completati</span><p class="ms">T1–T10 RI+SS</p></div>
+    <div class="metric"><span class="mv">RINA</span><span class="ml">Partner scientifico</span><p class="ms">Consulting S.p.A.</p></div>
+  </div>
+
+  <!-- Avanzamento per OR -->
+  <div class="g2 rev">
+    <div class="card">
+      <div class="card-hd"><span class="card-title">Avanzamento per Obiettivo di Ricerca</span><span class="bdg gr">Chiuso</span></div>
+      <div class="card-body sm">
+        <div class="pb-row"><div class="pb-hdr"><span>OR1 · Isola Saldatura Robotizzata (RI)</span><span style="color:var(--green);font-weight:700">100% ✓</span></div><div class="pb-bar"><div class="pb-fill" style="width:100%;background:var(--ri)"></div></div></div>
+        <div class="pb-row"><div class="pb-hdr"><span>OR2 · Piego-Bordatura (RI)</span><span style="color:var(--green);font-weight:700">100% ✓</span></div><div class="pb-bar"><div class="pb-fill" style="width:100%;background:var(--weld)"></div></div></div>
+        <div class="pb-row"><div class="pb-hdr"><span>OR3 · Integrazione &amp; Validazione RINA (SS)</span><span style="color:var(--green);font-weight:700">100% ✓</span></div><div class="pb-bar"><div class="pb-fill" style="width:100%;background:var(--green)"></div></div></div>
+        <div class="pb-row"><div class="pb-hdr"><span>Dissemination scientifica</span><span style="color:var(--green);font-weight:700">100% ✓</span></div><div class="pb-bar"><div class="pb-fill" style="width:100%;background:var(--iot)"></div></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><span class="card-title">Distribuzione budget per fase</span></div>
+      <div class="card-body">
+        <div style="position:relative;height:180px;"><canvas id="budgetPieChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toggle Sintesi/Dettaglio -->
+  <div class="toggle-bar rev">
+    <span class="toggle-label">Vista:</span>
+    <span class="toggle-label" style="color:var(--ri);font-weight:700">Sintesi</span>
+    <label class="toggle-switch">
+      <input type="checkbox" id="detailToggle" onchange="toggleDetail(this)">
+      <span class="toggle-slider"></span>
+    </label>
+    <span class="toggle-label">Dettaglio esteso</span>
+    <span style="font-size:10px;color:var(--ink4);margin-left:6px;">Attiva per vedere tabelle e dati granulari in tutte le sezioni</span>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+  § 2 · LUM ENTERPRISE / TECNOMULIPAST FOCUS  ← PRIORITÀ 1
+══════════════════════════════════════════════════ -->
+<section class="sec pmo-zone rev" id="focus-lum">
+  <div class="sec-hdr">
+    <p class="eyebrow ri">§ 2 · LUM Enterprise / Tecnomulipast Focus — PRIORITÀ 1</p>
+    <h2>Dati economici e risorse: <em class="b">il soggetto principale</em></h2>
+    <p class="sec-sub">Tecnomulipast S.r.l. · Gravina in Puglia · ATECO 28.93.00 · Fondata 2005 · Cap. Soc. €100.000 · Soci: Giorgio Giovanni 50% · Donato Laddaga 50% · 40 dipendenti (5 saldatori).</p>
+  </div>
+
+  <!-- Dati chiave azienda -->
+  <div class="g6 rev">
+    <div class="metric"><span class="mv" style="color:var(--weld2)">2005</span><span class="ml">Anno fondazione</span><p class="ms">Gravina in Puglia</p></div>
+    <div class="metric"><span class="mv b">40</span><span class="ml">Dipendenti</span><p class="ms">5 saldatori interni</p></div>
+    <div class="metric"><span class="mv gr">€3,5M</span><span class="ml">Fatturato 2016</span><p class="ms">+19% su 2014</p></div>
+    <div class="metric"><span class="mv">ISO 9001</span><span class="ml">Certificazione</span><p class="ms">Sistema qualità</p></div>
+    <div class="metric"><span class="mv b">€80.000</span><span class="ml">Contributo PIA</span><p class="ms">100% rendicontato</p></div>
+    <div class="metric"><span class="mv gr">Set. 2025</span><span class="ml">Chiusura progetto</span><p class="ms">Nei termini PIA</p></div>
+  </div>
+
+  <!-- Costi per anno + attività -->
+  <div class="g2 rev">
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-title">Costi annuali rendicontati · LUM Enterprise</span>
+        <div class="year-filter" style="margin:0;">
+          <button class="year-btn active" onclick="filterYear('all',this)">Tutti</button>
+          <button class="year-btn" onclick="filterYear('2021',this)">2021</button>
+          <button class="year-btn" onclick="filterYear('2022',this)">2022</button>
+          <button class="year-btn" onclick="filterYear('2023',this)">2023</button>
+          <button class="year-btn" onclick="filterYear('2024',this)">2024</button>
+          <button class="year-btn" onclick="filterYear('2025',this)">2025</button>
+        </div>
+      </div>
+      <div class="card-body sm">
+        <div class="yr-row" data-year="2021" style="margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;"><span style="color:var(--ink2);font-weight:600;">2021 · Anno 1 — Setup</span><span class="mono-val">€0</span></div>
+          <div class="pb-bar"><div class="pb-fill" style="width:1%;background:var(--ri)"></div></div>
+          <div style="font-size:10px;color:var(--ink4);margin-top:2px;">Magaletti, Cosoli, Massaro · avvio allocazione · 16 gg/risorsa</div>
+        </div>
+        <div class="yr-row" data-year="2022" style="margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;"><span style="color:var(--ink2);font-weight:600;">2022 · Anno 2 — Analisi AS-IS</span><span class="mono-val">€0</span></div>
+          <div class="pb-bar"><div class="pb-fill" style="width:1%;background:var(--ri)"></div></div>
+          <div style="font-size:10px;color:var(--ink4);margin-top:2px;">Magaletti 162,75 gg · Cosoli 149 gg · Massaro 80 gg</div>
+        </div>
+        <div class="yr-row" data-year="2023" style="margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;"><span style="color:var(--ink2);font-weight:600;">2023 · Anno 3 — RI + avvio SS</span><span class="mono-val" style="color:var(--ri);">€40.000</span></div>
+          <div class="pb-bar"><div class="pb-fill" style="width:50%;background:var(--ri)"></div></div>
+          <div style="font-size:10px;color:var(--ink4);margin-top:2px;">Magaletti 80 gg · Iusco 100,75 gg · Mix 48 RI + 32 SS</div>
+        </div>
+        <div class="yr-row" data-year="2024" style="margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;"><span style="color:var(--ink2);font-weight:600;">2024 · Anno 4 — SS predominante</span><span class="mono-val" style="color:var(--weld2);">€31.000</span></div>
+          <div class="pb-bar"><div class="pb-fill" style="width:38.75%;background:var(--weld)"></div></div>
+          <div style="font-size:10px;color:var(--ink4);margin-top:2px;">Magaletti 22 gg €11k · Iusco 66,67 gg €20k · Mix 12 RI + 20 SS</div>
+        </div>
+        <div class="yr-row" data-year="2025" style="margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;"><span style="color:var(--ink2);font-weight:600;">2025 · Anno 5 — Chiusura SS</span><span class="mono-val" style="color:var(--green);">€9.000</span></div>
+          <div class="pb-bar"><div class="pb-fill" style="width:11.25%;background:var(--green)"></div></div>
+          <div style="font-size:10px;color:var(--ink4);margin-top:2px;">Leogrande 20 gg · tariffa €450/gg · FINITO A SETTEMBRE</div>
+        </div>
+        <div style="padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--ink);">
+          <span>Totale rendicontato</span>
+          <span class="mono-val" style="color:var(--green);">€80.000 ✓</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><span class="card-title">Mix RI vs SS per anno</span><span class="bdg gr">Completato</span></div>
+      <div class="card-body">
+        <div style="position:relative;height:185px;"><canvas id="mixChart"></canvas></div>
+        <div style="margin-top:12px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink4);margin-bottom:6px;">Distribuzione complessiva</div>
+          <div style="display:flex;height:18px;border-radius:3px;overflow:hidden;">
+            <div style="width:67%;background:var(--ri);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;">RI 67%</div>
+            <div style="width:33%;background:var(--ss2);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;">SS 33%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+  § 3 · ALLOCAZIONE RISORSE
+══════════════════════════════════════════════════ -->
+<section class="sec rev" id="risorse">
+  <div class="sec-hdr">
+    <p class="eyebrow ri">§ 3 · Resource Allocation · LUM Enterprise</p>
+    <h2>Heatmap risorse: <em class="b">giornate e costi per anno</em></h2>
+  </div>
+
+  <!-- Sintesi KPI -->
+  <div class="g6 rev" style="margin-bottom:16px;">
+    <div class="metric"><span class="mv b">6</span><span class="ml">Risorse totali</span></div>
+    <div class="metric"><span class="mv">~393 gg</span><span class="ml">Effort aggregato</span></div>
+    <div class="metric"><span class="mv gr">€80.000</span><span class="ml">Costo totale</span></div>
+    <div class="metric"><span class="mv">€450/gg</span><span class="ml">Tariffa max (Leogrande)</span></div>
+    <div class="metric"><span class="mv b">67%</span><span class="ml">Quota RI</span></div>
+    <div class="metric"><span class="mv">Set. 2025</span><span class="ml">Ultima rendicontazione</span></div>
+  </div>
+
+  <!-- Heatmap -->
+  <div class="card rev" style="margin-bottom:16px;">
+    <div class="card-hd">
+      <span class="card-title">Heatmap Risorse × Anno · giornate rendicontate</span>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <span style="font-size:9px;color:var(--ink3);">Legenda:</span>
+        <span class="hc hc-g" style="font-size:9px;">In linea</span>
+        <span class="hc hc-a" style="font-size:9px;">Carico alto</span>
+        <span class="hc hc-n" style="font-size:9px;">Non attivo</span>
+      </div>
+    </div>
+    <div class="card-body sm" style="overflow-x:auto;">
+      <table class="heatmap">
+        <thead>
+          <tr>
+            <th>Risorsa</th><th>Ruolo</th>
+            <th style="text-align:center;">2021</th>
+            <th style="text-align:center;">2022</th>
+            <th style="text-align:center;">2023</th>
+            <th style="text-align:center;">2024</th>
+            <th style="text-align:center;">2025</th>
+            <th style="text-align:center;">Tot. gg</th>
+            <th style="text-align:center;">Costo</th>
+            <th>Stato</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>N. Magaletti</strong></td>
+            <td style="font-size:10.5px;color:var(--ink3);">Dirigente</td>
+            <td style="text-align:center;"><span class="hc hc-n">—</span></td>
+            <td style="text-align:center;"><span class="hc hc-a">162,75</span></td>
+            <td style="text-align:center;"><span class="hc hc-g">80</span></td>
+            <td style="text-align:center;"><span class="hc hc-g">22</span></td>
+            <td style="text-align:center;"><span class="hc hc-n">0</span></td>
+            <td style="text-align:center;"><strong>264,75</strong></td>
+            <td style="text-align:center;"><strong>€51.000</strong></td>
+            <td><span class="bdg gr">Completato</span></td>
+          </tr>
+          <tr>
+            <td><strong>Cosoli</strong></td>
+            <td style="font-size:10.5px;color:var(--ink3);">Ricercatore</td>
+            <td style="text-align:center;"><span class="hc hc-n">—</span></td>
+            <td style="text-align:center;"><span class="hc hc-a">149</span></td>
+            <td style="text-align:center;"><span class="hc hc-n">—</span></td>
+            <td style="text-align:center;"><span class="hc hc-n">—</span></td>
+            <td style="text-align:center;"><span class="hc hc-n">—</span></td>
+            <td style="text-align:center;"><strong>149</strong></td>
+            <td style="text-align:center;">—</td>
+            <td><span class="bdg n">Uscito</span></td>
+          </tr>
+          <tr>
+            <td><strong>Massaro</strong></td>
+            <td style="font-size:10.5px;color:var(--ink3);">Tecnico</td>
+            <td style="text-align:center;"><span class="hc hc-n">—</span></td>
+            <td style="text-align:center;"><span class="hc hc-g">80</span></td>
+            <td style="text-align:center;"><span class="hc hc-g">12,75</span></td>
+            <td style="text-align:center;"><span class="hc hc-n">0</span></td>
+            <td style="text-align:center;"><span class="hc hc-n">0</span></td>
+            <td style="text-align:center;"><strong>92,75</strong></td>
+            <td style="text-align:center;">—</td>
+            <td><span class="bdg am">Parziale</span></td>
+          </tr>
+          <tr>
+            <td><strong>A. Iusco</strong></td>
+            <td style="font-size:10.5px;color:var(--ink3);">Sviluppatore SS</td>
+            <td style="text-align:center;"><span class="hc hc-n">—</span></td>
+            <td style="text-align:center;"><span class="hc hc-n">—</span></td>
+            <td style="text-align:center;"><span class="hc hc-a">100,75</span></td>
+            <td style="text-align:center;"><span class="hc hc-a">66,67</span></td>
+            <td style="text-align:center;"><span class="hc hc-n">—</span></td>
+            <td style="text-align:center;"><strong>167,42</strong></td>
+            <td style="text-align:center;"><strong>€20.000</strong></td>
+            <td><span class="bdg gr">Completato</span></td>
+          </tr>
+          <tr>
+            <td><strong>A. Leogrande</strong></td>
+            <td style="font-size:10.5px;color:var(--ink3);">Ricercatore RI</td>
+            <td style="text-align:center;"><span class="hc hc-n">—</span></td>
+            <td style="text-align:center;"><span class="hc hc-n">—</span></td>
+            <td style="text-align:center;"><span class="hc hc-n">—</span></td>
+            <td style="text-align:center;"><span class="hc hc-g">0,625</span></td>
+            <td style="text-align:center;"><span class="hc hc-g">20</span></td>
+            <td style="text-align:center;"><strong>~20,6</strong></td>
+            <td style="text-align:center;"><strong>€9.000</strong></td>
+            <td><span class="bdg gr">Completato</span></td>
+          </tr>
+          <tr>
+            <td><strong>V. Notarnicola</strong></td>
+            <td style="font-size:10.5px;color:var(--ink3);">Analista KPI</td>
+            <td style="text-align:center;"><span class="hc hc-n">—</span></td>
+            <td style="text-align:center;"><span class="hc hc-n">—</span></td>
+            <td style="text-align:center;"><span class="hc hc-n">—</span></td>
+            <td style="text-align:center;"><span class="hc hc-g">4,645</span></td>
+            <td style="text-align:center;"><span class="hc hc-n">—</span></td>
+            <td style="text-align:center;"><strong>4,645</strong></td>
+            <td style="text-align:center;">—</td>
+            <td><span class="bdg n">Parziale</span></td>
+          </tr>
+          <tr class="tbl tot" style="background:var(--ri-lt);">
+            <td colspan="2"><strong>TOTALE LUM Enterprise</strong></td>
+            <td style="text-align:center;">—</td>
+            <td style="text-align:center;"><strong>~392 gg</strong></td>
+            <td style="text-align:center;"><strong>~306 gg</strong></td>
+            <td style="text-align:center;"><strong>~94 gg</strong></td>
+            <td style="text-align:center;"><strong>20 gg</strong></td>
+            <td style="text-align:center;"><strong>~812 gg</strong></td>
+            <td style="text-align:center;"><strong>€80.000</strong></td>
+            <td><span class="bdg gr">✓</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Dettaglio collassabile: saturazione per risorsa -->
+  <div class="accordion rev detail-only">
+    <button class="acc-trigger" onclick="toggleAcc(this)">
+      <div class="acc-left">
+        <span class="acc-icon">📊</span>
+        <div><div class="acc-title">Saturazione per risorsa · curva di carico annuale</div><div class="acc-subtitle">Dettaglio net capacity e distribuzione temporale</div></div>
+      </div>
+      <div class="acc-right"><span class="bdg n">Dettaglio</span><span class="acc-chevron">▼</span></div>
+    </button>
+    <div class="acc-body">
+      <div class="acc-body-inner">
+        <div class="g3">
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Magaletti · net capacity</div>
+            <div class="pb-row"><div class="pb-hdr"><span>2021</span><span>nc: 16</span></div><div class="pb-bar"><div class="pb-fill" style="width:6%;background:var(--ri)"></div></div></div>
+            <div class="pb-row"><div class="pb-hdr"><span>2022</span><span style="color:var(--amber)">nc: 162,75</span></div><div class="pb-bar"><div class="pb-fill" style="width:80%;background:var(--amber)"></div></div></div>
+            <div class="pb-row"><div class="pb-hdr"><span>2023</span><span>nc: 114,25 · €40k</span></div><div class="pb-bar"><div class="pb-fill" style="width:65%;background:var(--ri)"></div></div></div>
+            <div class="pb-row"><div class="pb-hdr"><span>2024</span><span>nc: 0,925 · €11k</span></div><div class="pb-bar"><div class="pb-fill" style="width:15%;background:var(--ri)"></div></div></div>
+            <div class="pb-row"><div class="pb-hdr"><span>2025</span><span style="color:var(--ink4)">nc: 0</span></div><div class="pb-bar"><div class="pb-fill" style="width:1%;background:var(--ri)"></div></div></div>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">A. Iusco · net capacity</div>
+            <div class="pb-row"><div class="pb-hdr"><span>2021–22</span><span style="color:var(--ink4)">non attivo</span></div><div class="pb-bar"><div class="pb-fill" style="width:1%;background:var(--ss2)"></div></div></div>
+            <div class="pb-row"><div class="pb-hdr"><span>2023</span><span style="color:var(--amber)">nc: 100,75 gg</span></div><div class="pb-bar"><div class="pb-fill" style="width:75%;background:var(--amber)"></div></div></div>
+            <div class="pb-row"><div class="pb-hdr"><span>2024</span><span style="color:var(--weld2)">nc: 24,4 · €20k</span></div><div class="pb-bar"><div class="pb-fill" style="width:50%;background:var(--weld)"></div></div></div>
+            <div class="pb-row"><div class="pb-hdr"><span>2025</span><span>completato</span></div><div class="pb-bar"><div class="pb-fill" style="width:5%;background:var(--green)"></div></div></div>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">A. Leogrande · tariffa €450/gg</div>
+            <div class="pb-row"><div class="pb-hdr"><span>2021–23</span><span style="color:var(--ink4)">non attivo</span></div><div class="pb-bar"><div class="pb-fill" style="width:1%;background:var(--purple)"></div></div></div>
+            <div class="pb-row"><div class="pb-hdr"><span>2024</span><span>0,625 gg</span></div><div class="pb-bar"><div class="pb-fill" style="width:3%;background:var(--purple)"></div></div></div>
+            <div class="pb-row"><div class="pb-hdr"><span>2025</span><span style="color:var(--green)">20 gg · €9.000</span></div><div class="pb-bar"><div class="pb-fill" style="width:60%;background:var(--green)"></div></div></div>
+            <div class="call ri" style="margin-top:10px;margin-bottom:0;font-size:11px;">Tariffa premium €450/gg per chiusura scientifica SS.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+  § 4 · PROJECT ROADMAP
+══════════════════════════════════════════════════ -->
+<section class="sec rev" id="roadmap">
+  <div class="sec-hdr">
+    <p class="eyebrow ri">§ 4 · Project Roadmap</p>
+    <h2>Timeline progettuale: <em class="b">milestone, task e deliverable</em></h2>
+  </div>
+
+  <!-- Gantt canvas -->
+  <div class="gantt-legend rev">
+    <div class="gl-i"><div class="gl-sw" style="background:#22c55e"></div>Completato</div>
+    <div class="gl-i"><div class="gl-sw" style="background:var(--ri)"></div>RI in corso</div>
+    <div class="gl-i"><div class="gl-sw" style="background:var(--ss2)"></div>SS pianificato</div>
+    <div class="gl-i"><div class="gl-sw" style="background:var(--iot2)"></div>IoT/Analytics</div>
+    <div class="gl-i"><div style="width:1px;height:14px;background:#ef4444;border-radius:1px"></div>I SAL</div>
+    <div class="gl-i"><div style="width:1px;height:14px;background:#d97706;border-radius:1px"></div>Collaudo</div>
+  </div>
+  <div id="ganttWrap" class="rev"><canvas id="ganttCanvas"></canvas></div>
+
+  <!-- Milestone stream -->
+  <div class="g2 rev" style="margin-top:20px;">
+    <div>
+      <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">Milestone chiave</div>
+      <div class="ms-stream">
+        <div class="ms-item">
+          <div class="ms-date">2021</div>
+          <div class="ms-spine"><div class="ms-dot done"></div><div class="ms-line"></div></div>
+          <div class="ms-card"><div class="ms-tag done">✓ COMPLETATO</div><div class="ms-title">Avvio progetto · Setup risorse</div><div class="ms-body">Magaletti, Cosoli, Massaro allocati. Avvio formale PIA G683TK4.</div><div class="ms-badges"><span class="bdg gr">€0 rendicontati</span></div></div>
+        </div>
+        <div class="ms-item">
+          <div class="ms-date">2022</div>
+          <div class="ms-spine"><div class="ms-dot done"></div><div class="ms-line"></div></div>
+          <div class="ms-card"><div class="ms-tag done">✓ COMPLETATO</div><div class="ms-title">Analisi AS-IS · Modello produttivo</div><div class="ms-body">Magaletti 162,75 gg · Cosoli 149 gg · Massaro 80 gg. Kick-off RINA Consulting (feb 2023).</div></div>
+        </div>
+        <div class="ms-item">
+          <div class="ms-date">2023</div>
+          <div class="ms-spine"><div class="ms-dot done"></div><div class="ms-line"></div></div>
+          <div class="ms-card"><div class="ms-tag done">✓ COMPLETATO</div><div class="ms-title">RI + Avvio SS · €40.000 rendicontati</div><div class="ms-body">Magaletti 80 gg €40k · Iusco 100,75 gg · IT Senior. Target €60k / Rendicontato €40k.</div><div class="ms-badges"><span class="bdg b">48 RI</span><span class="bdg ss">32 SS</span><span class="bdg gr">€40k</span></div></div>
+        </div>
+        <div class="ms-item">
+          <div class="ms-date">2024</div>
+          <div class="ms-spine"><div class="ms-dot done"></div><div class="ms-line"></div></div>
+          <div class="ms-card"><div class="ms-tag done">✓ COMPLETATO</div><div class="ms-title">SS + OPC-UA · €31.000 rendicontati</div><div class="ms-body">Magaletti 22 gg €11k · Iusco 66,67 gg €20k · Leogrande 0,625 gg · Notarnicola 4,645 gg.</div><div class="ms-badges"><span class="bdg b">12 RI</span><span class="bdg ss">20 SS</span><span class="bdg gr">€31k</span></div></div>
+        </div>
+        <div class="ms-item">
+          <div class="ms-date">Set. 2025</div>
+          <div class="ms-spine"><div class="ms-dot done"></div></div>
+          <div class="ms-card" style="border-color:var(--green);background:var(--green-lt);"><div class="ms-tag done">✓ CHIUSO · SETTEMBRE 2025</div><div class="ms-title">Chiusura SS · Validazione · €9.000 rendicontati</div><div class="ms-body">Leogrande 20 gg €9k (€450/gg). Target = Consuntivo = €9.000. Solo SS. Budget PIA 100% assorbito.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Deliverable list -->
+    <div>
+      <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">Deliverable completati</div>
+      <div class="tab-wrap">
+        <div class="tab-hdr">
+          <button class="tab-btn active" onclick="switchTab('del-ri',this)">RI (D1–D6)</button>
+          <button class="tab-btn" onclick="switchTab('del-ss',this)">SS (D7–D10)</button>
+          <button class="tab-btn" onclick="switchTab('del-diss',this)">Dissemination</button>
+        </div>
+        <div class="tab-pane active" id="del-ri" style="padding-top:12px;">
+          <ul class="del-list">
+            <li class="del-item"><span class="del-icon">✅</span><span class="del-code ri">D1.1</span><div><div class="del-name">Rapporto AS-IS processo saldatura</div><div class="del-meta">Mappatura processo esistente · baseline ricerca</div></div></li>
+            <li class="del-item"><span class="del-icon">✅</span><span class="del-code ri">D2.1</span><div><div class="del-name">Modello TO-BE integrato</div><div class="del-meta">Blueprint sistema target · entità e flussi</div></div></li>
+            <li class="del-item"><span class="del-icon">✅</span><span class="del-code ri">D3.1</span><div><div class="del-name">Specifiche parametri OPC-UA</div><div class="del-meta">FBK_VOLT · FBK_AMP · ARC_ON · CMD_WFS</div></div></li>
+            <li class="del-item"><span class="del-icon">✅</span><span class="del-code ri">D3.2</span><div><div class="del-name">Schema SQL bidirezionale ODP↔AVZ</div><div class="del-meta">DDL PostgreSQL · mapping OPC-UA · viste analitiche</div></div></li>
+            <li class="del-item"><span class="del-icon">✅</span><span class="del-code ri">D4.1</span><div><div class="del-name">KPI Framework qualità saldatura</div><div class="del-meta">10 indicatori · formule · soglie · alert</div></div></li>
+            <li class="del-item"><span class="del-icon">✅</span><span class="del-code ri">D5.1</span><div><div class="del-name">Architettura IoT / OPC-UA</div><div class="del-meta">92 nodi · polling · correlazione SQL↔OPC-UA</div></div></li>
+            <li class="del-item"><span class="del-icon">✅</span><span class="del-code ri">D6.1</span><div><div class="del-name">Modelli predittivi qualità saldatura</div><div class="del-meta">ML · anomaly detection · dataset training</div></div></li>
+          </ul>
+        </div>
+        <div class="tab-pane" id="del-ss" style="padding-top:12px;">
+          <ul class="del-list">
+            <li class="del-item"><span class="del-icon">✅</span><span class="del-code ss">D7.1</span><div><div class="del-name">Sistema integrazione JERP↔Cella</div><div class="del-meta">Interfaccia bidirezionale INT_* / SQL_*</div></div></li>
+            <li class="del-item"><span class="del-icon">✅</span><span class="del-code ss">D7.2</span><div><div class="del-name">Test suite integrazione</div><div class="del-meta">End-to-end: ODP JERP → robot → AVZ → JERP</div></div></li>
+            <li class="del-item"><span class="del-icon">✅</span><span class="del-code ss">D8.1</span><div><div class="del-name">Sistema IoT saldatura live</div><div class="del-meta">OPC-UA client · data lake · alert real-time</div></div></li>
+            <li class="del-item"><span class="del-icon">✅</span><span class="del-code ss">D9.1</span><div><div class="del-name">Dashboard KPI real-time</div><div class="del-meta">Monitoring: KPI saldatura · avanzamenti · NC</div></div></li>
+            <li class="del-item"><span class="del-icon">✅</span><span class="del-code ss">D9.2</span><div><div class="del-name">Report Data Analytics</div><div class="del-meta">Report periodico: trend · anomalie · raccomandazioni</div></div></li>
+            <li class="del-item"><span class="del-icon">✅</span><span class="del-code ss">D10.1</span><div><div class="del-name">Rapporto validazione cella ◆</div><div class="del-meta">Test end-to-end · KPI validati · conformità TO-BE</div></div></li>
+          </ul>
+        </div>
+        <div class="tab-pane" id="del-diss" style="padding-top:12px;">
+          <ul class="del-list">
+            <li class="del-item"><span class="del-icon">✅</span><span class="del-code" style="color:var(--iot)">PUB 1</span><div><div class="del-name">Paper 1 · Rivista indicizzata (Welding)</div><div class="del-meta">Correlazione parametri OPC-UA ↔ qualità giunto</div></div></li>
+            <li class="del-item"><span class="del-icon">✅</span><span class="del-code" style="color:var(--iot)">PUB 2</span><div><div class="del-name">Paper 2 · Journal Manufacturing</div><div class="del-meta">KPI Framework · integrazione JERP-IoT-Analytics</div></div></li>
+            <li class="del-item"><span class="del-icon">✅</span><span class="del-code" style="color:var(--iot)">WP</span><div><div class="del-name">Working Paper · SSRN/Zenodo</div><div class="del-meta">Anomaly detection OPC-UA · ML su Fanuc</div></div></li>
+            <li class="del-item"><span class="del-icon">✅</span><span class="del-code" style="color:var(--iot)">DATA</span><div><div class="del-name">Dataset Open · Kaggle</div><div class="del-meta">10k+ record saldatura + label qualità</div></div></li>
+            <li class="del-item"><span class="del-icon">✅</span><span class="del-code" style="color:var(--iot)">DEMO</span><div><div class="del-name">DemoLab finale · PIA Puglia</div><div class="del-meta">Demo live: ODP→robot→AVZ→dashboard KPI</div></div></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+  § 5 · OBIETTIVI DI RICERCA OR1/OR2/OR3
+══════════════════════════════════════════════════ -->
+<section class="sec pmo-zone rev" id="obiettivi">
+  <div class="sec-hdr">
+    <p class="eyebrow ri">§ 5 · Obiettivi di Ricerca · Kick-off 13 feb 2023</p>
+    <h2>Articolazione <em class="b">OR1 · OR2 · OR3</em></h2>
+    <p class="sec-sub">Definiti nel kick-off con RINA Consulting (ICT, TechScouting, Esperti Saldatura/Piego-Bordatura). Referenti TMP: Donato Laddaga, Giuseppe De Rosa. Coordinatore RINA: Giuseppe Pedullà.</p>
+  </div>
+  <div class="or-grid rev">
+    <div class="or-card or1">
+      <div class="or-card-top">
+        <div class="or-num">OR1 · Ricerca Industriale</div>
+        <div class="or-title">Isola di Saldatura Robotizzata</div>
+        <div style="margin-top:7px;display:flex;gap:5px;flex-wrap:wrap;"><span class="bdg b">RI</span><span class="bdg n">Fanuc</span><span class="bdg i">OPC-UA</span></div>
+      </div>
+      <div class="or-body">
+        <div class="or-item"><div class="or-dot"></div><span>Sistema afferraggio automatico: alta precisione e basse tolleranze di accoppiamento per curve girevoli e biforcazioni</span></div>
+        <div class="or-item"><div class="or-dot"></div><span>Robot antropomorfo: posizionamento, puntatura, mantenimento in posizione durante la saldatura</span></div>
+        <div class="or-item"><div class="or-dot"></div><span>Acquisizione posizione relativa lembi + adattamento dinamico percorso saldatura</span></div>
+        <div class="or-item"><div class="or-dot"></div><span>Integrazione hardware: robot, assi esterni, saldatrice, sistemi sensing (telecamere laser)</span></div>
+        <div class="or-note"><strong>Nota:</strong> Saldatura Laser valutata come prima opzione (costo ~€15k/kWh al kick-off, in discesa). MIG/MAG automatico alternativa primaria.</div>
+      </div>
+    </div>
+    <div class="or-card or2">
+      <div class="or-card-top">
+        <div class="or-num">OR2 · Ricerca Industriale</div>
+        <div class="or-title">Nuovo Stampo Piego-Bordatura</div>
+        <div style="margin-top:7px;display:flex;gap:5px;flex-wrap:wrap;"><span class="bdg b">RI</span><span class="bdg n">Stampaggio</span><span class="bdg w">Bordatura</span></div>
+      </div>
+      <div class="or-body">
+        <div class="or-item"><div class="or-dot"></div><span>Ottimizzazione stampaggio e bordatura: incremento automazione, ripetibilità e qualità</span></div>
+        <div class="or-item"><div class="or-dot"></div><span>Nuovo prodotto: tubo con sportello d'ispezione + raccordo con curva girevole</span></div>
+        <div class="or-item"><div class="or-dot"></div><span>Nota Laddaga (kick-off): pulizia e lucidatura sfuggita dalla stesura originale — da integrare</span></div>
+        <div class="or-note"><strong>Dipendenza OR1→OR2:</strong> Il completamento della saldatura robotizzata (OR1) precede l'ottimizzazione piego-bordatura (OR2).</div>
+      </div>
+    </div>
+    <div class="or-card or3">
+      <div class="or-card-top">
+        <div class="or-num">OR3 · Sviluppo Sperimentale</div>
+        <div class="or-title">Integrazione &amp; Validazione</div>
+        <div style="margin-top:7px;display:flex;gap:5px;flex-wrap:wrap;"><span class="bdg gr">SS</span><span class="bdg n">RINA</span><span class="bdg gr">POC</span></div>
+      </div>
+      <div class="or-body">
+        <div class="or-item"><div class="or-dot"></div><span>RINA Consulting: supporto alla realizzazione impianti (ICT, TechScouting, Saldatura, Piego-Bordatura)</span></div>
+        <div class="or-item"><div class="or-dot"></div><span>Gestione integratore esperto da individuare (area Nord Italia)</span></div>
+        <div class="or-item"><div class="or-dot"></div><span>Target originale: dicembre 2024 → prorogato (nuovo stabilimento disponibile marzo–giugno 2023)</span></div>
+        <div class="or-note"><strong>POC:</strong> "Proof of concept" nuova linea produttiva automatizzata. Area S3: Manifattura Sostenibile · KET 6.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+  § 6 · FORECAST & SCENARI
+══════════════════════════════════════════════════ -->
+<section class="sec fore-zone rev" id="forecast">
+  <div class="sec-hdr">
+    <p class="eyebrow fc">§ 6 · Forecast &amp; Scenari</p>
+    <h2>Simulazione budget e tempi: <em class="p">three scenario analysis</em></h2>
+  </div>
+  <div class="sc-grid rev">
+    <div class="sc cons">
+      <div class="sc-hd"><div class="sc-lbl">Scenario A · Conservativo</div><div class="sc-name">Chiusura Nov 2026</div><div class="sc-sub">Sequenziale · risorse limitate</div></div>
+      <div class="sc-bd">
+        <div class="sc-row"><span class="sc-k">Prob. successo</span><span class="sc-v" style="color:#4a6fa5">55%</span></div>
+        <div class="sc-row"><span class="sc-k">Budget assorbimento</span><span class="sc-v">80%</span></div>
+        <div class="sc-row"><span class="sc-k">Durata</span><span class="sc-v">40 mesi</span></div>
+      </div>
+    </div>
+    <div class="sc real">
+      <div class="sc-hd"><div class="sc-lbl">Scenario B · Realistico ★ Raccomandato</div><div class="sc-name">Chiusura Set 2025</div><div class="sc-sub">Parallelismo controllato</div></div>
+      <div class="sc-bd">
+        <div class="sc-row"><span class="sc-k">Prob. successo</span><span class="sc-v" style="color:var(--green)">78%</span></div>
+        <div class="sc-row"><span class="sc-k">Budget assorbimento</span><span class="sc-v">100%</span></div>
+        <div class="sc-row"><span class="sc-k">Stato</span><span class="sc-v" style="color:var(--green)">✓ REALIZZATO</span></div>
+      </div>
+    </div>
+    <div class="sc opt">
+      <div class="sc-hd"><div class="sc-lbl">Scenario C · Ottimistico</div><div class="sc-name">Chiusura Ago 2025</div><div class="sc-sub">Max parallelismo</div></div>
+      <div class="sc-bd">
+        <div class="sc-row"><span class="sc-k">Prob. successo</span><span class="sc-v" style="color:var(--weld2)">42%</span></div>
+        <div class="sc-row"><span class="sc-k">Budget assorbimento</span><span class="sc-v">93%</span></div>
+        <div class="sc-row"><span class="sc-k">Rischio qualità</span><span class="sc-v" style="color:var(--red)">Alto</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Simulatore collassabile -->
+  <div class="accordion rev">
+    <button class="acc-trigger" onclick="toggleAcc(this)">
+      <div class="acc-left"><span class="acc-icon">🎛️</span><div><div class="acc-title">Simulatore interattivo · What-if analysis</div><div class="acc-subtitle">Modella scenari personalizzati con slider</div></div></div>
+      <div class="acc-right"><span class="bdg p">Interattivo</span><span class="acc-chevron">▼</span></div>
+    </button>
+    <div class="acc-body">
+      <div class="acc-body-inner">
+        <div class="g2">
+          <div>
+            <div class="sl-row"><div class="sl-lbl"><span>% completamento RI (T1–T6)</span><span class="sl-out" id="riPct">100%</span></div><input type="range" id="sRI" min="0" max="100" value="100" oninput="calcForecast()"/></div>
+            <div class="sl-row"><div class="sl-lbl"><span>% completamento SS (T7–T10)</span><span class="sl-out" id="ssPct">100%</span></div><input type="range" id="sSS" min="0" max="100" value="100" oninput="calcForecast()"/></div>
+            <div class="sl-row"><div class="sl-lbl"><span>Efficienza team (%)</span><span class="sl-out" id="effPct">85%</span></div><input type="range" id="sEff" min="50" max="100" value="85" oninput="calcForecast()"/></div>
+            <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:4px;">
+              <button onclick="setFcPreset('B')" class="nbtn nbtn-primary">★ Scenario B</button>
+              <button onclick="setFcPreset('A')" class="nbtn nbtn-ghost">A Conserv.</button>
+              <button onclick="setFcPreset('C')" class="nbtn nbtn-ghost">C Ottimist.</button>
+            </div>
+          </div>
+          <div style="background:var(--warm);border-radius:var(--r2);padding:18px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+              <div style="text-align:center;padding:12px;background:#fff;border-radius:var(--r);border:1px solid var(--border);">
+                <div style="font-size:20px;font-weight:700;color:var(--purple)" id="out_months">—</div>
+                <div style="font-size:8.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-top:3px;">Mesi stimati</div>
+              </div>
+              <div style="text-align:center;padding:12px;background:#fff;border-radius:var(--r);border:1px solid var(--border);">
+                <div style="font-size:20px;font-weight:700;color:var(--green)" id="out_prob">—</div>
+                <div style="font-size:8.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-top:3px;">Prob. successo</div>
+              </div>
+            </div>
+            <div id="out_reading_fc" style="padding:10px;border-radius:var(--r);font-size:11.5px;font-weight:600;background:#fff;border:1px solid var(--border);">Regola i parametri.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+  § 7 · STAKEHOLDER & ATTORI ESTERNI  ← PRIORITÀ 2
+══════════════════════════════════════════════════ -->
+<section class="sec rev" id="stakeholder">
+  <div class="sec-hdr">
+    <p class="eyebrow" style="color:var(--ink3);">§ 7 · Stakeholder &amp; Attori esterni — PRIORITÀ 2</p>
+    <h2>Partner, fornitori e <em class="i">referenti esterni</em></h2>
+    <p class="sec-sub">Attori coinvolti nel progetto con ruolo secondario rispetto al soggetto principale LUM Enterprise/Tecnomulipast.</p>
+  </div>
+  <div class="sh-grid rev">
+    <div class="sh-card">
+      <div class="sh-av" style="background:rgba(255,107,53,.1);color:var(--weld);">GG</div>
+      <div class="sh-name">Giorgio Giovanni</div>
+      <div class="sh-role">Socio fondatore 50% · Rappresentante legale · Presidente CDA</div>
+      <div class="sh-tags"><span class="bdg w">Capofila PIA</span></div>
+    </div>
+    <div class="sh-card">
+      <div class="sh-av" style="background:rgba(255,107,53,.1);color:var(--weld);">DL</div>
+      <div class="sh-name">Donato Laddaga</div>
+      <div class="sh-role">Socio fondatore 50% · Referente tecnico PIA · Kick-off feb 2023</div>
+      <div class="sh-tags"><span class="bdg w">Referente TMP</span></div>
+    </div>
+    <div class="sh-card">
+      <div class="sh-av" style="background:var(--ri-lt);color:var(--ri);">GDR</div>
+      <div class="sh-name">Giuseppe De Rosa</div>
+      <div class="sh-role">Referente tecnico TMP · Kick-off feb 2023 · R&amp;S</div>
+      <div class="sh-tags"><span class="bdg b">Referente R&amp;S</span></div>
+    </div>
+    <div class="sh-card">
+      <div class="sh-av" style="background:var(--green-lt);color:var(--green);">GP</div>
+      <div class="sh-name">G. Pedullà · RINA</div>
+      <div class="sh-role">Coordinatore RINA Consulting · Partner scientifico OR3</div>
+      <div class="sh-tags"><span class="bdg gr">RINA CSM</span><span class="bdg n">OR3</span></div>
+    </div>
+  </div>
+
+  <!-- Partner tecnologici collassabili -->
+  <div class="accordion rev">
+    <button class="acc-trigger" onclick="toggleAcc(this)">
+      <div class="acc-left"><span class="acc-icon">🔧</span><div><div class="acc-title">Partner tecnologici e fornitori sistema</div><div class="acc-subtitle">TECNOROBOT TR4.0 · JERP · RINA Consulting · Implementa</div></div></div>
+      <div class="acc-right"><span class="bdg n">4 soggetti</span><span class="acc-chevron">▼</span></div>
+    </button>
+    <div class="acc-body">
+      <div class="acc-body-inner">
+        <div class="g2">
+          <table class="tbl">
+            <thead><tr><th>Soggetto</th><th>Ruolo</th><th>Tecnologia / Contratto</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Fornitore TECNOROBOT</strong></td><td>Cella robotica</td><td>TR4.0 · Fanuc · OPC-UA Server · 92 nodi</td></tr>
+              <tr><td><strong>Fornitore JERP</strong></td><td>Gestionale</td><td>SQL Server Express · ODP/AVANZAMENTI · SSMS</td></tr>
+              <tr><td><strong>RINA Consulting S.p.A.</strong></td><td>Partner R&amp;S (OR3)</td><td>Validazione · integrazione · scouting tecnologico</td></tr>
+              <tr><td><strong>Implementa</strong></td><td>Implementazione SW</td><td>Deploy JERP · integrazione · contratto €70k target</td></tr>
+            </tbody>
+          </table>
+          <div class="call ri">
+            <strong>Nota su RINA Consulting:</strong> rappresentanza multi-sede (ICT, TechScouting, Saldatura, Piego-Bordatura). Integratore esperto da area Nord Italia da individuare per OR3. Scouting tecnologie e materiali priorità immediata post kick-off.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+  § 8 · PIANO PAGAMENTI & CASHFLOW
+══════════════════════════════════════════════════ -->
+<section class="sec rev" id="pagamenti">
+  <div class="sec-hdr">
+    <p class="eyebrow am">§ 8 · Piano Pagamenti &amp; Cashflow</p>
+    <h2>Stato finanziario: <em class="a">4 contratti · tranche di pagamento</em></h2>
+    <p class="sec-sub">Dati reali dal foglio Tecnomulipast-Pagamenti. Ultime 2 fatture JERP saldate aprile–luglio 2025.</p>
+  </div>
+
+  <!-- Riepilogo progress -->
+  <div class="g4 rev" style="margin-bottom:16px;">
+    <div class="card" style="padding:14px;text-align:center;">
+      <div style="font-size:10px;font-weight:700;color:var(--ri);margin-bottom:4px;">JERP</div>
+      <div style="font-size:20px;font-weight:700;color:var(--ri);">€20.000</div>
+      <div style="font-size:10px;color:var(--ink3);">di €80.000 target</div>
+      <div class="pb-bar" style="margin-top:8px;"><div class="pb-fill" style="width:25%;background:var(--ri)"></div></div>
+      <div style="font-size:10px;color:var(--ink3);margin-top:4px;">25%</div>
+    </div>
+    <div class="card" style="padding:14px;text-align:center;">
+      <div style="font-size:10px;font-weight:700;color:var(--weld);margin-bottom:4px;">R&D</div>
+      <div style="font-size:20px;font-weight:700;color:var(--weld);">€48.689</div>
+      <div style="font-size:10px;color:var(--ink3);">di €80.000 target</div>
+      <div class="pb-bar" style="margin-top:8px;"><div class="pb-fill" style="width:61%;background:var(--weld)"></div></div>
+      <div style="font-size:10px;color:var(--ink3);margin-top:4px;">61%</div>
+    </div>
+    <div class="card" style="padding:14px;text-align:center;">
+      <div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:4px;">IMPLEMENTA</div>
+      <div style="font-size:20px;font-weight:700;color:var(--green);">€46.000</div>
+      <div style="font-size:10px;color:var(--ink3);">di €70.000 target</div>
+      <div class="pb-bar" style="margin-top:8px;"><div class="pb-fill" style="width:66%;background:var(--green)"></div></div>
+      <div style="font-size:10px;color:var(--ink3);margin-top:4px;">66%</div>
+    </div>
+    <div class="card" style="padding:14px;text-align:center;">
+      <div style="font-size:10px;font-weight:700;color:var(--purple);margin-bottom:4px;">LUM ENT.</div>
+      <div style="font-size:20px;font-weight:700;color:var(--purple);">€22.689</div>
+      <div style="font-size:10px;color:var(--ink3);">di €90.000 target</div>
+      <div class="pb-bar" style="margin-top:8px;"><div class="pb-fill" style="width:25%;background:var(--purple)"></div></div>
+      <div style="font-size:10px;color:var(--ink3);margin-top:4px;">25%</div>
+    </div>
+  </div>
+
+  <div class="call am rev">
+    <strong>⚠ Nota contabile:</strong> La fattura Ft. 9 del 8 giu 2022 (€60.000) è stata emessa su contratto R&D per errore (MA), mentre avrebbe dovuto essere su JERP (indicazione DG). Fare il punto con Implementa e rappresentanti TMP. Ultime 2 fatture JERP (30K€) saldate aprile–luglio 2025. R&D totale = €80.000 + IVA = €97.600.
+  </div>
+
+  <!-- Dettaglio tranche collassabile -->
+  <div class="accordion rev">
+    <button class="acc-trigger" onclick="toggleAcc(this)">
+      <div class="acc-left"><span class="acc-icon">🧾</span><div><div class="acc-title">Dettaglio tranche · tutte le fatture emesse</div><div class="acc-subtitle">Date, importi nominali, IVA, progressivo cumulativo</div></div></div>
+      <div class="acc-right"><span class="bdg am">4 contratti</span><span class="acc-chevron">▼</span></div>
+    </button>
+    <div class="acc-body">
+      <div class="acc-body-inner">
+        <div class="g2" style="gap:20px;">
+          <div>
+            <!-- JERP -->
+            <div class="pay-hdr jerp"><span>JERP · Fornitura gestionale</span><span>Target: €80.000</span></div>
+            <div class="pay-row" style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);background:var(--warm);"><span>Data</span><span>Nominale</span><span>Con IVA</span><span>Progressivo</span><span>Note</span></div>
+            <div class="pay-row"><span class="pay-date" style="font-size:10px;color:var(--ink3);">10/09/21</span><span class="mono-val pos">€10.000</span><span class="mono-val" style="color:var(--ink3);">€12.200</span><span class="mono-val">€10.000</span><span style="font-size:10px;color:var(--ink3);">Ft.13 · acconto set.21</span></div>
+            <div class="pay-row"><span class="pay-date" style="font-size:10px;color:var(--ink3);">04/05/22</span><span class="mono-val pos">€8.197</span><span class="mono-val" style="color:var(--ink3);">€10.000</span><span class="mono-val">€18.197</span><span style="font-size:10px;color:var(--ink3);">Seconda tranche</span></div>
+            <div class="pay-row"><span class="pay-date" style="font-size:10px;color:var(--ink3);">15/06/22</span><span class="mono-val pos">€1.803</span><span class="mono-val" style="color:var(--ink3);">€2.200</span><span class="mono-val">€20.000</span><span style="font-size:10px;color:var(--ink3);">Terza tranche</span></div>
+            <div class="pay-row tot"><span>TOTALE EROGATO</span><span class="mono-val pos">€20.000</span><span class="mono-val">€24.400</span><span class="mono-val pos">25%</span><span style="font-size:10px;color:var(--ink3);">Ultime 2 ft. apr–lug 2025</span></div>
+            <!-- R&D -->
+            <div class="pay-hdr rnd" style="margin-top:16px;"><span>R&amp;D · Contratto ricerca</span><span>Target: €80.000</span></div>
+            <div class="pay-row" style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);background:var(--warm);"><span>Data</span><span>Nominale</span><span>Con IVA</span><span>Progressivo</span><span>Note</span></div>
+            <div class="pay-row"><span class="pay-date" style="font-size:10px;color:var(--ink3);">14/10/21</span><span class="mono-val pos">€10.000</span><span class="mono-val" style="color:var(--ink3);">€12.200</span><span class="mono-val">€10.000</span><span style="font-size:10px;color:var(--ink3);">Ft.15 · acconto</span></div>
+            <div class="pay-row"><span class="pay-date" style="font-size:10px;color:var(--ink3);">15/06/22</span><span class="mono-val pos">€10.000</span><span class="mono-val" style="color:var(--ink3);">€12.200</span><span class="mono-val">€20.000</span><span style="font-size:10px;color:var(--ink3);">Seconda tranche</span></div>
+            <div class="pay-row"><span class="pay-date" style="font-size:10px;color:var(--ink3);">24/11/22</span><span class="mono-val pos">€12.295</span><span class="mono-val" style="color:var(--ink3);">€15.000</span><span class="mono-val">€32.295</span><span style="font-size:10px;color:var(--amber);">Ft.9 · nota errore imputaz.</span></div>
+            <div class="pay-row"><span class="pay-date" style="font-size:10px;color:var(--ink3);">20/12/22</span><span class="mono-val pos">€16.393</span><span class="mono-val" style="color:var(--ink3);">€20.000</span><span class="mono-val">€48.689</span><span style="font-size:10px;color:var(--ink3);">Quarta tranche</span></div>
+            <div class="pay-row tot"><span>TOTALE EROGATO</span><span class="mono-val pos">€48.689</span><span class="mono-val">€59.400</span><span class="mono-val pos">61%</span><span></span></div>
+          </div>
+          <div>
+            <!-- Implementa -->
+            <div class="pay-hdr impl"><span>IMPLEMENTA · Contratto implementazione</span><span>Target: €70.000</span></div>
+            <div class="pay-row" style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);background:var(--warm);"><span>Data</span><span>Nominale</span><span>Con IVA</span><span>Progressivo</span><span>Note</span></div>
+            <div class="pay-row"><span class="pay-date" style="font-size:10px;color:var(--ink3);">26/10/21</span><span class="mono-val pos">€14.000</span><span class="mono-val" style="color:var(--ink3);">€17.080</span><span class="mono-val">€14.000</span><span style="font-size:10px;color:var(--ink3);">20% avanzamento</span></div>
+            <div class="pay-row"><span class="pay-date" style="font-size:10px;color:var(--ink3);">11/05/21</span><span class="mono-val pos">€6.000</span><span class="mono-val" style="color:var(--ink3);">€7.320</span><span class="mono-val">€20.000</span><span style="font-size:10px;color:var(--ink3);">29%</span></div>
+            <div class="pay-row"><span class="pay-date" style="font-size:10px;color:var(--ink3);">05/10/22</span><span class="mono-val pos">€6.000</span><span class="mono-val" style="color:var(--ink3);">€7.320</span><span class="mono-val">€26.000</span><span style="font-size:10px;color:var(--ink3);">37%</span></div>
+            <div class="pay-row"><span class="pay-date" style="font-size:10px;color:var(--ink3);">—</span><span class="mono-val pos">€20.000</span><span class="mono-val" style="color:var(--ink3);">€24.400</span><span class="mono-val">€46.000</span><span style="font-size:10px;color:var(--ink3);">66%</span></div>
+            <div class="pay-row tot"><span>TOTALE EROGATO</span><span class="mono-val pos">€46.000</span><span class="mono-val">€56.120</span><span class="mono-val pos">66%</span><span></span></div>
+            <!-- LUM -->
+            <div class="pay-hdr lum" style="margin-top:16px;"><span>LUM ENTERPRISE · Ricerca universitaria</span><span>Target: €90.000</span></div>
+            <div class="pay-row" style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);background:var(--warm);"><span>Data</span><span>Nominale</span><span>Con IVA</span><span>Progressivo</span><span>Note</span></div>
+            <div class="pay-row"><span class="pay-date" style="font-size:10px;color:var(--ink3);">—</span><span class="mono-val pos">€6.000</span><span class="mono-val" style="color:var(--ink3);">€7.320</span><span class="mono-val">€6.000</span><span style="font-size:10px;color:var(--ink3);">7%</span></div>
+            <div class="pay-row"><span class="pay-date" style="font-size:10px;color:var(--ink3);">—</span><span class="mono-val pos">€2.197</span><span class="mono-val" style="color:var(--ink3);">€2.680</span><span class="mono-val">€8.197</span><span style="font-size:10px;color:var(--ink3);">9%</span></div>
+            <div class="pay-row"><span class="pay-date" style="font-size:10px;color:var(--ink3);">—</span><span class="mono-val pos">€5.803</span><span class="mono-val" style="color:var(--ink3);">€7.080</span><span class="mono-val">€14.000</span><span style="font-size:10px;color:var(--ink3);">16%</span></div>
+            <div class="pay-row"><span class="pay-date" style="font-size:10px;color:var(--ink3);">—</span><span class="mono-val pos">€12.295</span><span class="mono-val" style="color:var(--ink3);">€15.000</span><span class="mono-val">€26.295</span><span style="font-size:10px;color:var(--ink3);">29%</span></div>
+            <div class="pay-row"><span class="pay-date" style="font-size:10px;color:var(--ink3);">—</span><span class="mono-val neg">−€3.607</span><span class="mono-val" style="color:var(--ink3);">—</span><span class="mono-val">€22.689</span><span style="font-size:10px;color:var(--amber);">⚠ Rettifica negativa · verificare</span></div>
+            <div class="pay-row tot"><span>TOTALE EROGATO</span><span class="mono-val pos">€22.689</span><span class="mono-val">€27.680</span><span class="mono-val pos">25%</span><span></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+  § 9 · CELLA ROBOTICA & JERP INTEGRATION
+  (accordion — sezione tecnica di secondo livello)
+══════════════════════════════════════════════════ -->
+<section class="sec weld-zone rev" id="cella-jerp">
+  <div class="sec-hdr">
+    <p class="eyebrow weld">§ 9 · Cella Robotica &amp; JERP Integration</p>
+    <h2>Architettura tecnica: <em class="w">TECNOROBOT TR4.0 · OPC-UA · SQL</em></h2>
+  </div>
+
+  <!-- AS-IS / TO-BE sintetico -->
+  <div class="g2 rev" style="margin-bottom:12px;">
+    <div class="card">
+      <div class="card-hd"><span class="card-title">AS-IS → TO-BE · Trasformazione processo</span></div>
+      <div class="card-body sm">
+        <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;font-size:11.5px;">
+          <div>
+            <div style="font-size:8.5px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:#6b7280;margin-bottom:6px;background:#6b7280;color:#fff;padding:4px 8px;border-radius:3px;">AS-IS</div>
+            <div style="color:var(--red);padding:3px 0;border-bottom:1px solid var(--border);">✗ Parametri saldatura non monitorati</div>
+            <div style="color:var(--red);padding:3px 0;border-bottom:1px solid var(--border);">✗ Avanzamento manuale dall'operatore</div>
+            <div style="color:var(--red);padding:3px 0;border-bottom:1px solid var(--border);">✗ Allarmi robot non storicizzati</div>
+            <div style="color:var(--red);padding:3px 0;border-bottom:1px solid var(--border);">✗ Qualità rilevata solo a ispezione</div>
+            <div style="color:var(--red);padding:3px 0;">✗ No dataset per analisi predittiva</div>
+          </div>
+          <div style="font-size:20px;color:var(--weld2);padding:0 8px;">→</div>
+          <div>
+            <div style="font-size:8.5px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;background:var(--weld);color:#fff;padding:4px 8px;border-radius:3px;margin-bottom:6px;">TO-BE</div>
+            <div style="color:var(--green);padding:3px 0;border-bottom:1px solid var(--border);">✓ FBK_VOLT/AMP/ARC real-time via OPC-UA</div>
+            <div style="color:var(--green);padding:3px 0;border-bottom:1px solid var(--border);">✓ Automatico: FLAG_FINITO 1/199/299</div>
+            <div style="color:var(--green);padding:3px 0;border-bottom:1px solid var(--border);">✓ ALLARME1–10 classificati e storicizzati</div>
+            <div style="color:var(--green);padding:3px 0;border-bottom:1px solid var(--border);">✓ Alert predittivi pre-difetto (ML)</div>
+            <div style="color:var(--green);padding:3px 0;">✓ Dataset processo → 10k+ record ML</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><span class="card-title">OPC-UA · Nodi variabile</span><span class="bdg i">92 nodi</span></div>
+      <div class="card-body sm">
+        <div class="g2" style="gap:8px;margin-bottom:0;">
+          <div style="padding:10px;background:var(--ri-lt);border-radius:var(--r);border:1px solid rgba(26,82,118,.2);">
+            <div style="font-size:9px;font-weight:800;color:var(--ri);letter-spacing:.12em;margin-bottom:6px;">INT_* SCRITTURA (53 nodi)</div>
+            <div style="font-size:10.5px;color:var(--ink2);line-height:1.7;font-family:monospace;">INT_ODPx_PROG<br>INT_ODPx_COMM<br>INT_ODPx_ART<br>INT_ODPx_QUANT<br>INT_ODPx_ID<br><span style="color:var(--ink4);">ODP 1–8 × 7 campi</span></div>
+          </div>
+          <div style="padding:10px;background:var(--iot-lt);border-radius:var(--r);border:1px solid rgba(14,124,123,.2);">
+            <div style="font-size:9px;font-weight:800;color:var(--iot);letter-spacing:.12em;margin-bottom:6px;">SQL_* LETTURA (39 nodi)</div>
+            <div style="font-size:10.5px;color:var(--ink2);line-height:1.7;font-family:monospace;">SQL_FBK_VOLT<br>SQL_FBK_AMP<br>SQL_CMD_WFS<br>SQL_ARCON_H/M/S<br>SQL_FLAG_FINITO<br>SQL_ALARM1–10</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Digital Twin SVG collassabile -->
+  <div class="accordion rev">
+    <button class="acc-trigger" onclick="toggleAcc(this)">
+      <div class="acc-left"><span class="acc-icon">🤖</span><div><div class="acc-title">Digital Twin · Schema cella robotica TECNOROBOT TR4.0</div><div class="acc-subtitle">Robot Fanuc · PLC · HMI · Alimentatore · Sensori · PC SQL · JERP</div></div></div>
+      <div class="acc-right"><span class="bdg w">SVG Industriale</span><span class="acc-chevron">▼</span></div>
+    </button>
+    <div class="acc-body">
+      <div class="acc-body-inner" style="background:#0A1628;border-radius:var(--r);">
+        <svg viewBox="0 0 860 440" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">
+          <defs>
+            <pattern id="dgrid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,.04)" stroke-width=".5"/></pattern>
+            <marker id="da" markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><polygon points="0 0,7 3,0 6" fill="#00D4FF"/></marker>
+            <marker id="do" markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><polygon points="0 0,7 3,0 6" fill="#e8601c"/></marker>
+            <marker id="dg" markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><polygon points="0 0,7 3,0 6" fill="#1a6e3a"/></marker>
+          </defs>
+          <rect width="860" height="440" fill="#0A1628"/>
+          <rect width="860" height="440" fill="url(#dgrid)"/>
+          <!-- Titolo -->
+          <text x="14" y="18" font-size="9" font-weight="800" fill="rgba(0,212,255,.7)" font-family="Montserrat,sans-serif" letter-spacing="2">TECNOROBOT TR4.0 · WELDING CELL DIGITAL REPRESENTATION</text>
+          <!-- Perimetro cella -->
+          <rect x="80" y="32" width="570" height="360" rx="8" fill="rgba(232,96,28,.04)" stroke="rgba(232,96,28,.3)" stroke-width="1.5" stroke-dasharray="8,4"/>
+          <text x="94" y="50" font-size="8" font-weight="700" fill="rgba(232,96,28,.6)" font-family="Montserrat,sans-serif" letter-spacing="1.5">CELL PERIMETER</text>
+          <!-- PLC -->
+          <rect x="96" y="68" width="84" height="60" rx="5" fill="#1E3A5F" stroke="#00D4FF" stroke-width="1.5"/>
+          <text x="138" y="92" text-anchor="middle" font-size="9" font-weight="800" fill="#00D4FF" font-family="Montserrat,sans-serif">PLC</text>
+          <text x="138" y="106" text-anchor="middle" font-size="7.5" fill="#718096" font-family="Montserrat,sans-serif">Controllo cella</text>
+          <circle cx="104" cy="118" r="3" fill="#00E676"/><circle cx="114" cy="118" r="3" fill="#00E676"/><circle cx="124" cy="118" r="3" fill="#FFB300"/>
+          <!-- Robot ARM -->
+          <rect x="300" y="270" width="80" height="18" rx="3" fill="#1E3A5F" stroke="#00D4FF" stroke-width="1.5"/>
+          <text x="340" y="283" text-anchor="middle" font-size="7.5" fill="#00D4FF" font-family="Montserrat,sans-serif" font-weight="700">BASE FANUC</text>
+          <rect x="350" y="210" width="18" height="62" fill="#2D4A6E" stroke="#3D5A7E" stroke-width="1"/>
+          <line x1="358" y1="210" x2="310" y2="162" stroke="#00D4FF" stroke-width="4" stroke-linecap="round"/>
+          <line x1="310" y1="162" x2="282" y2="134" stroke="#00D4FF" stroke-width="3" stroke-linecap="round"/>
+          <ellipse cx="280" cy="126" rx="7" ry="12" fill="#e8601c" opacity=".9"/>
+          <circle cx="280" cy="113" r="2.5" fill="#FFB300"/>
+          <circle cx="358" cy="210" r="7" fill="#0A1628" stroke="#00D4FF" stroke-width="2"/>
+          <circle cx="310" cy="162" r="5" fill="#0A1628" stroke="#00D4FF" stroke-width="2"/>
+          <!-- Robot label -->
+          <rect x="372" y="160" width="100" height="38" rx="4" fill="rgba(0,212,255,.08)" stroke="rgba(0,212,255,.3)" stroke-width="1"/>
+          <text x="422" y="176" text-anchor="middle" font-size="8.5" font-weight="800" fill="#00D4FF" font-family="Montserrat,sans-serif">ROBOT FANUC</text>
+          <text x="422" y="188" text-anchor="middle" font-size="7.5" fill="#718096" font-family="Montserrat,sans-serif">6-axis · OPC-UA Server</text>
+          <text x="422" y="199" text-anchor="middle" font-size="7.5" fill="#00E676" font-family="Montserrat,sans-serif">● OPERATIVO</text>
+          <!-- Banco lavoro -->
+          <rect x="180" y="268" width="90" height="46" rx="4" fill="#1A202C" stroke="#4A5568" stroke-width="1.5"/>
+          <text x="225" y="287" text-anchor="middle" font-size="8" font-weight="700" fill="#A0AEC0" font-family="Montserrat,sans-serif">BANCO</text>
+          <text x="225" y="300" text-anchor="middle" font-size="7.5" fill="#718096" font-family="Montserrat,sans-serif">LAVORO</text>
+          <rect x="200" y="256" width="52" height="13" rx="2" fill="#4A5568" stroke="#718096" stroke-width="1"/>
+          <text x="226" y="265" text-anchor="middle" font-size="6.5" fill="#A0AEC0" font-family="Montserrat,sans-serif">PEZZO</text>
+          <!-- Posizionatore -->
+          <rect x="474" y="252" width="84" height="54" rx="4" fill="#1A202C" stroke="#4A5568" stroke-width="1.5"/>
+          <text x="516" y="275" text-anchor="middle" font-size="8" font-weight="700" fill="#A0AEC0" font-family="Montserrat,sans-serif">POSIZION.</text>
+          <text x="516" y="288" text-anchor="middle" font-size="7.5" fill="#718096" font-family="Montserrat,sans-serif">Staz. 1 / 2</text>
+          <text x="516" y="300" text-anchor="middle" font-size="7.5" fill="#A0AEC0" font-family="Montserrat,sans-serif">Rotativo</text>
+          <!-- Alimentatore -->
+          <rect x="560" y="162" width="86" height="58" rx="5" fill="#1A202C" stroke="#e8601c" stroke-width="1.5"/>
+          <text x="603" y="183" text-anchor="middle" font-size="8" font-weight="800" fill="#e8601c" font-family="Montserrat,sans-serif">ALIMENTATORE</text>
+          <text x="603" y="196" text-anchor="middle" font-size="7.5" fill="#718096" font-family="Montserrat,sans-serif">FBK_VOLT · FBK_AMP</text>
+          <text x="603" y="208" text-anchor="middle" font-size="7.5" fill="#718096" font-family="Montserrat,sans-serif">CMD_WFS · ARC_ON</text>
+          <text x="603" y="218" text-anchor="middle" font-size="7.5" fill="#FFB300" font-family="Montserrat,sans-serif">● 23.4V · 185A</text>
+          <!-- HMI Touch -->
+          <rect x="560" y="68" width="86" height="70" rx="5" fill="#1A202C" stroke="#4A5568" stroke-width="1.5"/>
+          <rect x="568" y="76" width="70" height="48" rx="3" fill="#0A1628" stroke="#2D4A6E" stroke-width="1"/>
+          <rect x="572" y="80" width="62" height="7" rx="2" fill="rgba(0,212,255,.15)"/>
+          <rect x="572" y="91" width="35" height="5" rx="1" fill="rgba(0,230,118,.1)"/>
+          <rect x="611" y="91" width="23" height="5" rx="1" fill="rgba(232,96,28,.1)"/>
+          <text x="603" y="134" text-anchor="middle" font-size="8" font-weight="700" fill="#A0AEC0" font-family="Montserrat,sans-serif">HMI TOUCH</text>
+          <!-- Quadro elettrico -->
+          <rect x="96" y="168" width="84" height="54" rx="5" fill="#1A202C" stroke="#4A5568" stroke-width="1.5"/>
+          <text x="138" y="192" text-anchor="middle" font-size="8" font-weight="700" fill="#A0AEC0" font-family="Montserrat,sans-serif">QUADRO</text>
+          <text x="138" y="204" text-anchor="middle" font-size="7.5" fill="#718096" font-family="Montserrat,sans-serif">ELETTRICO</text>
+          <text x="138" y="215" text-anchor="middle" font-size="7.5" fill="#00E676" font-family="Montserrat,sans-serif">● ATTIVO</text>
+          <!-- PC SQL -->
+          <rect x="96" y="264" width="68" height="50" rx="5" fill="#1E3A5F" stroke="#00D4FF" stroke-width="1.5"/>
+          <text x="130" y="283" text-anchor="middle" font-size="7.5" font-weight="800" fill="#00D4FF" font-family="Montserrat,sans-serif">PC / SQL</text>
+          <text x="130" y="295" text-anchor="middle" font-size="6.5" fill="#718096" font-family="Montserrat,sans-serif">TECNOROBOT</text>
+          <text x="130" y="306" text-anchor="middle" font-size="6.5" fill="#00D4FF" font-family="Montserrat,sans-serif">ODP/AVZ DB</text>
+          <!-- Sensori -->
+          <circle cx="230" cy="178" r="13" fill="#1A202C" stroke="#7C4DFF" stroke-width="1.5"/>
+          <text x="230" y="175" text-anchor="middle" font-size="7" font-weight="700" fill="#7C4DFF" font-family="Montserrat,sans-serif">SEN</text>
+          <text x="230" y="185" text-anchor="middle" font-size="6" fill="#718096" font-family="Montserrat,sans-serif">SORI</text>
+          <circle cx="450" cy="178" r="13" fill="#1A202C" stroke="#7C4DFF" stroke-width="1.5"/>
+          <text x="450" y="175" text-anchor="middle" font-size="7" font-weight="700" fill="#7C4DFF" font-family="Montserrat,sans-serif">SEN</text>
+          <text x="450" y="185" text-anchor="middle" font-size="6" fill="#718096" font-family="Montserrat,sans-serif">SORI</text>
+          <!-- Ethernet backbone -->
+          <line x1="180" y1="136" x2="556" y2="136" stroke="rgba(0,212,255,.25)" stroke-width="1.5" stroke-dasharray="6,3"/>
+          <text x="366" y="130" text-anchor="middle" font-size="7.5" fill="rgba(0,212,255,.6)" font-family="Montserrat,sans-serif" letter-spacing="2">INDUSTRIAL ETHERNET · OPC-UA</text>
+          <!-- Connections -->
+          <line x1="180" y1="98" x2="180" y2="136" stroke="rgba(0,212,255,.4)" stroke-width="1" marker-end="url(#da)"/>
+          <line x1="603" y1="138" x2="603" y2="162" stroke="rgba(232,96,28,.5)" stroke-width="1" marker-end="url(#do)"/>
+          <line x1="138" y1="136" x2="138" y2="168" stroke="rgba(0,212,255,.4)" stroke-width="1"/>
+          <line x1="130" y1="264" x2="130" y2="222" stroke="rgba(0,212,255,.4)" stroke-width="1"/>
+          <line x1="230" y1="165" x2="230" y2="136" stroke="rgba(124,77,255,.5)" stroke-width="1"/>
+          <line x1="450" y1="165" x2="450" y2="136" stroke="rgba(124,77,255,.5)" stroke-width="1"/>
+          <!-- JERP server -->
+          <rect x="680" y="32" width="164" height="368" rx="7" fill="rgba(10,22,40,.9)" stroke="rgba(0,212,255,.2)" stroke-width="1.5"/>
+          <rect x="680" y="32" width="164" height="26" rx="7" fill="rgba(0,212,255,.1)"/>
+          <text x="762" y="49" text-anchor="middle" font-size="9" font-weight="800" fill="#00D4FF" font-family="Montserrat,sans-serif" letter-spacing="1">JERP SERVER</text>
+          <rect x="690" y="70" width="144" height="32" rx="4" fill="rgba(0,212,255,.06)" stroke="rgba(0,212,255,.2)" stroke-width="1"/>
+          <text x="762" y="87" text-anchor="middle" font-size="8" font-weight="700" fill="#00D4FF" font-family="Montserrat,sans-serif">SQL Database</text>
+          <text x="762" y="98" text-anchor="middle" font-size="7" fill="#718096" font-family="Montserrat,sans-serif">ODP · AVANZAMENTI</text>
+          <rect x="690" y="112" width="144" height="32" rx="4" fill="rgba(232,96,28,.06)" stroke="rgba(232,96,28,.2)" stroke-width="1"/>
+          <text x="762" y="129" text-anchor="middle" font-size="8" font-weight="700" fill="#e8601c" font-family="Montserrat,sans-serif">OPC-UA Client</text>
+          <text x="762" y="140" text-anchor="middle" font-size="7" fill="#718096" font-family="Montserrat,sans-serif">INT_* scrittura · SQL_* lettura</text>
+          <rect x="690" y="154" width="144" height="32" rx="4" fill="rgba(26,110,58,.06)" stroke="rgba(26,110,58,.2)" stroke-width="1"/>
+          <text x="762" y="171" text-anchor="middle" font-size="8" font-weight="700" fill="#1a6e3a" font-family="Montserrat,sans-serif">KPI Engine</text>
+          <text x="762" y="182" text-anchor="middle" font-size="7" fill="#718096" font-family="Montserrat,sans-serif">VOLT · AMP · OEE · NC%</text>
+          <rect x="690" y="196" width="144" height="32" rx="4" fill="rgba(91,45,142,.06)" stroke="rgba(91,45,142,.2)" stroke-width="1"/>
+          <text x="762" y="213" text-anchor="middle" font-size="8" font-weight="700" fill="#5b2d8e" font-family="Montserrat,sans-serif">Data Analytics</text>
+          <text x="762" y="224" text-anchor="middle" font-size="7" fill="#718096" font-family="Montserrat,sans-serif">ML · Forecast · Anomaly</text>
+          <rect x="690" y="238" width="144" height="32" rx="4" fill="rgba(196,122,0,.06)" stroke="rgba(196,122,0,.2)" stroke-width="1"/>
+          <text x="762" y="255" text-anchor="middle" font-size="8" font-weight="700" fill="#c47a00" font-family="Montserrat,sans-serif">Alert Manager</text>
+          <text x="762" y="266" text-anchor="middle" font-size="7" fill="#718096" font-family="Montserrat,sans-serif">NC · Alarm · Threshold</text>
+          <rect x="690" y="280" width="144" height="32" rx="4" fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+          <text x="762" y="297" text-anchor="middle" font-size="8" font-weight="700" fill="#A0AEC0" font-family="Montserrat,sans-serif">PMO Dashboard</text>
+          <text x="762" y="308" text-anchor="middle" font-size="7" fill="#718096" font-family="Montserrat,sans-serif">Monitoring · SAL · Report</text>
+          <!-- Cella → JERP -->
+          <line x1="650" y1="200" x2="678" y2="200" stroke="rgba(0,212,255,.7)" stroke-width="2" marker-end="url(#da)"/>
+          <line x1="678" y1="215" x2="650" y2="215" stroke="rgba(26,110,58,.7)" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#dg)"/>
+          <text x="660" y="194" font-size="7" fill="rgba(0,212,255,.8)" font-family="Montserrat,sans-serif" text-anchor="middle">SQL_*</text>
+          <text x="660" y="222" font-size="7" fill="rgba(26,110,58,.8)" font-family="Montserrat,sans-serif" text-anchor="middle">INT_*</text>
+          <!-- Footer -->
+          <rect x="80" y="400" width="570" height="20" rx="0" fill="rgba(0,0,0,.3)"/>
+          <text x="94" y="413" font-size="7" fill="#718096" font-family="Montserrat,sans-serif">Porte: 443 · 80 · 11444 · Pro-face Connect · DB: TECNOROBOT · Login: customer</text>
+          <text x="636" y="413" font-size="7" fill="#00E676" font-family="Montserrat,sans-serif" font-weight="700" text-anchor="end">● SISTEMA ATTIVO</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Workflow ODP collassabile -->
+  <div class="accordion rev" style="margin-top:12px;">
+    <button class="acc-trigger" onclick="toggleAcc(this)">
+      <div class="acc-left"><span class="acc-icon">🔄</span><div><div class="acc-title">Workflow ODP · ciclo produttivo completo</div><div class="acc-subtitle">Da JERP al robot e ritorno · logica FLAG_FINITO 1/199/299</div></div></div>
+      <div class="acc-right"><span class="bdg i">7 step</span><span class="acc-chevron">▼</span></div>
+    </button>
+    <div class="acc-body">
+      <div class="acc-body-inner">
+        <div style="display:flex;flex-wrap:wrap;gap:0;margin-bottom:16px;">
+          <div style="flex:1;min-width:110px;padding:12px;background:var(--paper);border:1px solid var(--border);text-align:center;position:relative;">
+            <div style="font-size:8.5px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--ink4);margin-bottom:4px;">01</div>
+            <div style="font-size:11px;font-weight:700;color:var(--ink);">Compilazione ODP</div>
+            <div style="font-size:10px;color:var(--ink3);margin-top:3px;">JERP popola tabella ODP (max 8)</div>
+          </div>
+          <div style="display:flex;align-items:center;padding:0 6px;font-size:16px;color:var(--weld2);">→</div>
+          <div style="flex:1;min-width:110px;padding:12px;background:var(--paper);border:1px solid var(--border);text-align:center;">
+            <div style="font-size:8.5px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--ink4);margin-bottom:4px;">02</div>
+            <div style="font-size:11px;font-weight:700;color:var(--ink);">Import HMI</div>
+            <div style="font-size:10px;color:var(--ink3);margin-top:3px;">Operatore importa su touch screen</div>
+          </div>
+          <div style="display:flex;align-items:center;padding:0 6px;font-size:16px;color:var(--weld2);">→</div>
+          <div style="flex:1;min-width:110px;padding:12px;background:var(--weld-lt);border:1px solid var(--weld);text-align:center;">
+            <div style="font-size:8.5px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--weld);margin-bottom:4px;">03</div>
+            <div style="font-size:11px;font-weight:700;color:var(--ink);">Saldatura</div>
+            <div style="font-size:10px;color:var(--ink3);margin-top:3px;">Robot Fanuc esegue ciclo</div>
+          </div>
+          <div style="display:flex;align-items:center;padding:0 6px;font-size:16px;color:var(--weld2);">→</div>
+          <div style="flex:1;min-width:110px;padding:12px;background:var(--paper);border:1px solid var(--border);text-align:center;">
+            <div style="font-size:8.5px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--ink4);margin-bottom:4px;">04</div>
+            <div style="font-size:11px;font-weight:700;color:var(--ink);">Avanzamento</div>
+            <div style="font-size:10px;color:var(--ink3);margin-top:3px;">Robot scrive tabella AVANZAMENTI</div>
+          </div>
+          <div style="display:flex;align-items:center;padding:0 6px;font-size:16px;color:var(--weld2);">→</div>
+          <div style="flex:1;min-width:110px;padding:12px;background:var(--paper);border:1px solid var(--border);text-align:center;">
+            <div style="font-size:8.5px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--ink4);margin-bottom:4px;">05</div>
+            <div style="font-size:11px;font-weight:700;color:var(--ink);">FLAG = 199/299</div>
+            <div style="font-size:10px;color:var(--ink3);margin-top:3px;">Commessa completata Staz.1/2</div>
+          </div>
+          <div style="display:flex;align-items:center;padding:0 6px;font-size:16px;color:var(--weld2);">→</div>
+          <div style="flex:1;min-width:110px;padding:12px;background:var(--green-lt);border:1px solid var(--green);text-align:center;">
+            <div style="font-size:8.5px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--green);margin-bottom:4px;">06</div>
+            <div style="font-size:11px;font-weight:700;color:var(--ink);">KPI &amp; Analytics</div>
+            <div style="font-size:10px;color:var(--ink3);margin-top:3px;">Dataset → report qualità</div>
+          </div>
+        </div>
+        <div class="call ri">
+          <strong>Regola diagnostica:</strong> Una riga in AVANZAMENTI con ALLARME1≠NULL è record diagnostico, NON avanzamento produttivo. Il sistema deve distinguere i due tipi per evitare falsi avanzamenti nel JERP.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+  § 10 · KPI QUALITÀ SALDATURA
+══════════════════════════════════════════════════ -->
+<section class="sec rev" id="kpi-qualita">
+  <div class="sec-hdr">
+    <p class="eyebrow weld">§ 10 · KPI Qualità Saldatura</p>
+    <h2>Indicatori chiave: <em class="w">parametri di processo in tempo reale</em></h2>
+  </div>
+  <div class="kw-grid rev">
+    <div class="kw volt"><div class="kw-name">Voltaggio saldatura (feedback)</div><div><span class="kw-val">23.4</span><span class="kw-unit">V</span></div><div class="kw-range">Range nominale: 18–28V · SQL_FBK_VOLT</div><div class="kw-status" style="color:var(--green);">✓ Nel range</div></div>
+    <div class="kw amp"><div class="kw-name">Amperaggio saldatura (feedback)</div><div><span class="kw-val">185</span><span class="kw-unit">A</span></div><div class="kw-range">Range nominale: 140–220A · SQL_FBK_AMP</div><div class="kw-status" style="color:var(--green);">✓ Nel range</div></div>
+    <div class="kw arc"><div class="kw-name">Saturazione arco saldatrice</div><div><span class="kw-val">84</span><span class="kw-unit">%</span></div><div class="kw-range">ARC_ON / TEMPO_ESECUZ · Target &gt;75%</div><div class="kw-status" style="color:var(--green);">✓ Sopra soglia · OEE positivo</div></div>
+    <div class="kw qty"><div class="kw-name">Avanzamento produzione</div><div><span class="kw-val">12</span><span class="kw-unit">/ 25 pz</span></div><div class="kw-range">QTA_PRODOTTA / QUANT · commessa COMM-003</div><div class="kw-status" style="color:var(--ri);">⏳ 48%</div></div>
+    <div class="kw alarm"><div class="kw-name">Tasso non conformità</div><div><span class="kw-val">2.1</span><span class="kw-unit">%</span></div><div class="kw-range">Cicli ALLARME≠NULL / totale · Target &lt;3%</div><div class="kw-status" style="color:var(--amber);">⚡ Monitorare trend</div></div>
+    <div class="kw cycle"><div class="kw-name">Tempo ciclo medio</div><div><span class="kw-val">198</span><span class="kw-unit">sec</span></div><div class="kw-range">Avg TEMPO_ESECUZIONE · Std 212 sec</div><div class="kw-status" style="color:var(--green);">✓ −6,6% vs standard</div></div>
+  </div>
+
+  <!-- KPI framework collassabile -->
+  <div class="accordion rev">
+    <button class="acc-trigger" onclick="toggleAcc(this)">
+      <div class="acc-left"><span class="acc-icon">📐</span><div><div class="acc-title">KPI Framework completo · 10 indicatori con formule</div><div class="acc-subtitle">Definizione, sorgente OPC-UA, soglie di alert e OR di riferimento</div></div></div>
+      <div class="acc-right"><span class="bdg n">10 KPI</span><span class="acc-chevron">▼</span></div>
+    </button>
+    <div class="acc-body">
+      <div class="acc-body-inner">
+        <table class="tbl">
+          <thead><tr><th>KPI</th><th>Formula / Calcolo</th><th>Sorgente OPC-UA / SQL</th><th>Target</th><th>Alert</th><th>OR</th></tr></thead>
+          <tbody>
+            <tr><td><strong>FBK_VOLT_AVG</strong></td><td style="font-size:11px;">AVG(fbk_volt) per programma</td><td><code style="font-family:monospace;font-size:10px;">SQL_FBK_VOLT</code></td><td>Nominale ±5%</td><td>±10% → NC</td><td><span class="bdg b">OR1</span></td></tr>
+            <tr><td><strong>FBK_AMP_AVG</strong></td><td style="font-size:11px;">AVG(fbk_amp) per stazione</td><td><code style="font-family:monospace;font-size:10px;">SQL_FBK_AMP</code></td><td>Nominale ±5%</td><td>±10% → NC</td><td><span class="bdg b">OR1</span></td></tr>
+            <tr><td><strong>ARC_SAT_%</strong></td><td style="font-size:11px;">SUM(arc_on_sec)/SUM(tempo) ×100</td><td><code style="font-family:monospace;font-size:10px;">SQL_ARCON_*</code></td><td>&gt;75%</td><td>&lt;60% → alert</td><td><span class="bdg b">OR1</span></td></tr>
+            <tr><td><strong>CYCLE_TIME_AVG</strong></td><td style="font-size:11px;">AVG(tempo_esecuzione) per programma</td><td><code style="font-family:monospace;font-size:10px;">SQL_TEMPO_ESEC</code></td><td>Std articolo</td><td>&gt;media+2σ</td><td><span class="bdg b">OR1</span></td></tr>
+            <tr><td><strong>TASSO_NC</strong></td><td style="font-size:11px;">N(allarme≠NULL)/N_totale ×100</td><td><code style="font-family:monospace;font-size:10px;">SQL_ALARM1–10</code></td><td>&lt;3%</td><td>&gt;5% → escalation</td><td><span class="bdg b">OR1</span></td></tr>
+            <tr><td><strong>OEE_SALDATURA</strong></td><td style="font-size:11px;">Disponib. × Prestaz. × Qualità</td><td>Multi-sorgente</td><td>&gt;85%</td><td>&lt;75% → review</td><td><span class="bdg b">OR1</span></td></tr>
+            <tr><td><strong>DELTA_SCOSTAMENTO</strong></td><td style="font-size:11px;">(Consuntivo − Preventivo)/Prev ×100</td><td>JERP · Commessa</td><td>±5%</td><td>&gt;±15% → PMO</td><td><span class="bdg b">OR1</span></td></tr>
+            <tr><td><strong>THROUGHPUT_PZ/H</strong></td><td style="font-size:11px;">QTA_PRODOTTA/(tempo_totale/3600)</td><td><code style="font-family:monospace;font-size:10px;">SQL_QTA_PRODOTTA</code></td><td>Benchmark</td><td>&lt;80% → review</td><td><span class="bdg ss">SS</span></td></tr>
+            <tr><td><strong>MTBF_ALLARMI</strong></td><td style="font-size:11px;">Tempo_operativo / N_allarmi</td><td><code style="font-family:monospace;font-size:10px;">SQL_ALARM*</code></td><td>&gt;4h</td><td>&lt;2h → manut.</td><td><span class="bdg ss">SS</span></td></tr>
+            <tr><td><strong>WFS_STABILITY</strong></td><td style="font-size:11px;">STDDEV(cmd_wfs) per programma</td><td><code style="font-family:monospace;font-size:10px;">SQL_CMD_WFS</code></td><td>σ &lt; 0.5</td><td>σ &gt; 1.0 → difetto</td><td><span class="bdg b">OR1</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+  § 11 · APPENDICE — Modello dati, entità, investimenti
+══════════════════════════════════════════════════ -->
+<section class="sec neutral-zone rev" id="appendice">
+  <div class="sec-hdr">
+    <p class="eyebrow">§ 11 · Appendice — Dati estesi &amp; Documentazione</p>
+    <h2>Livelli di dettaglio: <em class="b">modello dati, investimenti, entità</em></h2>
+  </div>
+
+  <!-- Investimenti -->
+  <div class="accordion rev">
+    <button class="acc-trigger" onclick="toggleAcc(this)">
+      <div class="acc-left"><span class="acc-icon">💰</span><div><div class="acc-title">Sintesi investimenti PIA · Attivi materiali + R&S</div><div class="acc-subtitle">€450k macchinari + €320k opere murarie + R&S + consulenze</div></div></div>
+      <div class="acc-right"><span class="bdg n">Business Plan</span><span class="acc-chevron">▼</span></div>
+    </button>
+    <div class="acc-body">
+      <div class="acc-body-inner">
+        <div class="g2">
+          <div>
+            <div class="pb-row"><div class="pb-hdr"><span><strong>Macchinari &amp; SW</strong></span><span>€450.027</span></div><div class="pb-bar"><div class="pb-fill" style="width:59%;background:var(--ri)"></div></div></div>
+            <div class="pb-row"><div class="pb-hdr"><span><strong>Opere murarie</strong></span><span>€320.411</span></div><div class="pb-bar"><div class="pb-fill" style="width:42%;background:var(--weld)"></div></div></div>
+            <div class="pb-row"><div class="pb-hdr"><span><strong>R&amp;S (budget PIA)</strong></span><span>€80.000</span></div><div class="pb-bar"><div class="pb-fill" style="width:10%;background:var(--amber)"></div></div></div>
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:12px;font-weight:700;">
+              <span>Totale stimato</span><span style="color:var(--ri);">~€850.000</span>
+            </div>
+          </div>
+          <div>
+            <div class="call ri" style="margin-bottom:10px;"><strong>HW/SW dettaglio:</strong> 3× workstation UT + PC direzione + server Tower + plotter A0 + stampanti = €10.920 · 4× Windows 7 Pro + MS Office + AutoCAD 2014 Full 3D = €6.420</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <span class="bdg n">Bonifica amianto</span><span class="bdg n">Pannelli coibentati</span>
+              <span class="bdg n">Fotovoltaico</span><span class="bdg n">Impianto elettrico</span>
+              <span class="bdg n">Allarme + TVCC</span><span class="bdg n">Antincendio</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modello dati entità -->
+  <div class="accordion rev">
+    <button class="acc-trigger" onclick="toggleAcc(this)">
+      <div class="acc-left"><span class="acc-icon">🗄️</span><div><div class="acc-title">Modello dati TO-BE · 19 entità informatiche</div><div class="acc-subtitle">ODP · Commessa · Parametri Saldatura · KPI · Log IoT · Dataset ML</div></div></div>
+      <div class="acc-right"><span class="bdg b">19 entità</span><span class="acc-chevron">▼</span></div>
+    </button>
+    <div class="acc-body">
+      <div class="acc-body-inner">
+        <div class="entity-grid">
+          <div class="entity-card ri"><p class="ec-label ri">Produzione</p><p class="ec-title">Ordine di Produzione (ODP)</p><p class="ec-fields">PROGRAMMA · COMMESSA · ARTICOLO · QUANT · ID</p></div>
+          <div class="entity-card ri"><p class="ec-label ri">Produzione</p><p class="ec-title">Commessa</p><p class="ec-fields">Codice · Cliente · Stato · Valore prev./consunt.</p></div>
+          <div class="entity-card ri"><p class="ec-label ri">Produzione</p><p class="ec-title">Articolo / Distinta Base</p><p class="ec-fields">Codice · Componenti · Ciclo lavoro · Programma robot</p></div>
+          <div class="entity-card ri"><p class="ec-label ri">Produzione</p><p class="ec-title">Ciclo di Lavoro</p><p class="ec-fields">Fase · Centro lavoro · Costo · Programma Fanuc</p></div>
+          <div class="entity-card weld"><p class="ec-label weld">Cella</p><p class="ec-title">Cella Robotica</p><p class="ec-fields">ID impianto · Stazione (1/2) · IP controller</p></div>
+          <div class="entity-card weld"><p class="ec-label weld">Cella</p><p class="ec-title">Avanzamento Produzione</p><p class="ec-fields">DATA/HH/MIN · OPERATORE · QTA · FLAG_FINITO · ID_SQL</p></div>
+          <div class="entity-card weld"><p class="ec-label weld">Qualità</p><p class="ec-title">Parametri Saldatura</p><p class="ec-fields">FBK_VOLT · FBK_AMP · CMD_WFS · ARC_ON_H/M/S</p></div>
+          <div class="entity-card weld"><p class="ec-label weld">Qualità</p><p class="ec-title">Non Conformità</p><p class="ec-fields">Tipo · ALLARME 1–10 · ODP_ref · Azione correttiva</p></div>
+          <div class="entity-card iot"><p class="ec-label iot">IoT</p><p class="ec-title">Log IoT (OPC-UA)</p><p class="ec-fields">Node ID (NS2|String|Target01.*) · Timestamp · Valore</p></div>
+          <div class="entity-card iot"><p class="ec-label iot">Analytics</p><p class="ec-title">Dataset di Processo</p><p class="ec-fields">Campioni · Feature ML · Label qualità · Split train/test</p></div>
+          <div class="entity-card green"><p class="ec-label green">KPI</p><p class="ec-title">KPI Qualità Saldatura</p><p class="ec-fields">Tasso NC · Δ Volt · ARC_SAT% · OEE saldatura</p></div>
+          <div class="entity-card green"><p class="ec-label green">KPI</p><p class="ec-title">KPI Efficienza Produzione</p><p class="ec-fields">TEMPO/std · QTA/pianif. · Uptime · MTBF</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Schema SQL collassabile -->
+  <div class="accordion rev">
+    <button class="acc-trigger" onclick="toggleAcc(this)">
+      <div class="acc-left"><span class="acc-icon">💾</span><div><div class="acc-title">Schema PostgreSQL / Supabase · DDL principale</div><div class="acc-subtitle">Tabelle ODP, AVANZAMENTI, KPI_QUALITA, NON_CONFORMITA</div></div></div>
+      <div class="acc-right"><span class="bdg i">DDL</span><span class="acc-chevron">▼</span></div>
+    </button>
+    <div class="acc-body">
+      <div class="acc-body-inner">
+        <div style="background:#0d1f2d;border-radius:var(--r);padding:16px 20px;overflow-x:auto;">
+          <pre style="color:#e2e8f0;font-size:11px;font-family:'JetBrains Mono',monospace;line-height:1.65;white-space:pre-wrap;">-- TECNOMULIPAST · Schema PostgreSQL/Supabase
+CREATE TABLE odp (
+  id SERIAL PRIMARY KEY,
+  programma TEXT NOT NULL,
+  commessa TEXT NOT NULL,
+  des_prod TEXT,
+  articolo TEXT,
+  quant_da_produrre INTEGER NOT NULL,
+  stato TEXT CHECK (stato IN ('in_attesa','in_lavorazione','completato')),
+  sync_robot BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE avanzamento (
+  id BIGSERIAL PRIMARY KEY,
+  odp_id INTEGER REFERENCES odp(id),
+  data_gg INTEGER, data_mm INTEGER, data_aa INTEGER,
+  hh INTEGER, min INTEGER, sec INTEGER,
+  timestamp_calc TIMESTAMPTZ GENERATED ALWAYS AS (
+    MAKE_TIMESTAMP(data_aa+2000, data_mm, data_gg, hh, min, sec)
+  ) STORED,
+  operatore TEXT, stazione INTEGER,
+  programma TEXT, commessa TEXT, articolo TEXT,
+  tempo_esecuzione REAL,
+  qta_prodotta INTEGER,
+  flag_finito INTEGER,          -- 1 | 199 | 299
+  id_sql INTEGER,               -- FK → odp.id
+  fbk_volt REAL, fbk_amp REAL,
+  cmd_wfs REAL,
+  arc_on_h INTEGER, arc_on_m INTEGER, arc_on_s INTEGER,
+  allarme1 TEXT, allarme2 TEXT, allarme3 TEXT,
+  allarme4 TEXT, allarme5 TEXT, allarme6 TEXT,
+  allarme7 TEXT, allarme8 TEXT, allarme9 TEXT, allarme10 TEXT,
+  is_diagnostica BOOLEAN GENERATED ALWAYS AS (allarme1 IS NOT NULL) STORED
+);
+
+CREATE TABLE kpi_qualita (
+  id BIGSERIAL PRIMARY KEY,
+  periodo_da TIMESTAMPTZ, periodo_a TIMESTAMPTZ,
+  programma TEXT, articolo TEXT, n_cicli INTEGER,
+  volt_medio REAL, amp_medio REAL, wfs_medio REAL,
+  arc_on_sec_totale INTEGER,
+  tasso_nc REAL, oee_saldatura REAL, n_allarmi INTEGER
+);
+
+CREATE INDEX idx_avanzamento_odp ON avanzamento(odp_id);
+CREATE INDEX idx_avanzamento_ts ON avanzamento(timestamp_calc);
+CREATE INDEX idx_avanzamento_flag ON avanzamento(flag_finito);</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div style="margin-top:28px;padding:18px 22px;background:var(--ri-lt);border:1px solid rgba(26,82,118,.2);border-radius:var(--r2);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;" class="rev">
+    <div>
+      <div style="font-size:9px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--ri);margin-bottom:3px;">TECNOMULIPAST · PMO GOVERNANCE PLATFORM v3 UNIFIED</div>
+      <div style="font-size:11px;color:var(--ink3);">Dashboard unificata · 11 sezioni · 8 accordion collassabili · Tab interne · Toggle dettaglio · Anno filter</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:11px;color:var(--ink3);">Progetto <strong style="color:var(--green);">CHIUSO</strong> · Settembre 2025</div>
+      <div style="font-size:10px;color:var(--ink4);">Budget €80.000 · 100% rendicontato · PIA G683TK4</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+  JAVASCRIPT
+══════════════════════════════════════════════════ -->
+<script>
+// ── ACCORDION ──────────────────────────────────────
+function toggleAcc(trigger){
+  const body=trigger.nextElementSibling;
+  const isOpen=trigger.classList.contains('open');
+  trigger.classList.toggle('open',!isOpen);
+  body.classList.toggle('open',!isOpen);
+}
+function toggleAllAccordions(){
+  const triggers=document.querySelectorAll('.acc-trigger');
+  const anyOpen=[...triggers].some(t=>t.classList.contains('open'));
+  triggers.forEach(t=>{
+    const body=t.nextElementSibling;
+    t.classList.toggle('open',!anyOpen);
+    if(body)body.classList.toggle('open',!anyOpen);
+  });
+}
+
+// ── TAB SYSTEM ─────────────────────────────────────
+function switchTab(paneId,btn){
+  const container=btn.closest('.tab-wrap');
+  container.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  container.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(paneId)?.classList.add('active');
+}
+
+// ── TOGGLE DETTAGLIO ───────────────────────────────
+function toggleDetail(cb){
+  document.querySelectorAll('.detail-only').forEach(el=>{
+    el.classList.toggle('hidden',!cb.checked);
+  });
+}
+
+// ── YEAR FILTER ────────────────────────────────────
+function filterYear(year,btn){
+  document.querySelectorAll('.year-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.yr-row').forEach(row=>{
+    if(year==='all'){row.style.display='';}
+    else{row.style.display=row.dataset.year===year?'':'none';}
+  });
+}
+
+// ── FORECAST SIMULATOR ────────────────────────────
+function calcForecast(){
+  const ri=+document.getElementById('sRI').value/100;
+  const ss=+document.getElementById('sSS').value/100;
+  const eff=+document.getElementById('sEff').value/100;
+  document.getElementById('riPct').textContent=Math.round(ri*100)+'%';
+  document.getElementById('ssPct').textContent=Math.round(ss*100)+'%';
+  document.getElementById('effPct').textContent=Math.round(eff*100)+'%';
+  const base=36,riD=(1-ri)*6,ssD=(1-ss)*8,effB=(eff-.85)*10;
+  const months=Math.round(base+riD+ssD-effB);
+  const prob=Math.max(20,Math.min(92,Math.round((ri*.35+ss*.35+eff*.3)*100)));
+  document.getElementById('out_months').textContent=months+' mesi';
+  document.getElementById('out_prob').textContent=prob+'%';
+  const rd=document.getElementById('out_reading_fc');
+  if(prob>=75){rd.style.background='var(--green-lt)';rd.style.color='var(--green)';rd.textContent='✓ Scenario favorevole · Probabilità alta di completamento nei termini.';}
+  else if(prob>=55){rd.style.background='var(--amber-lt)';rd.style.color='var(--amber)';rd.textContent='⚡ Scenario bilanciato · Monitorare avanzamento RI.';}
+  else{rd.style.background='var(--red-lt)';rd.style.color='var(--red)';rd.textContent='⚠ Scenario critico · Azioni correttive necessarie.';}
+}
+function setFcPreset(s){
+  const p={A:{sRI:80,sSS:70,sEff:70},B:{sRI:100,sSS:100,sEff:85},C:{sRI:100,sSS:100,sEff:100}};
+  const pp=p[s];if(!pp)return;
+  Object.entries(pp).forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.value=v;});
+  calcForecast();
+}
+window.addEventListener('load',calcForecast);
+
+// ── GANTT CANVAS ──────────────────────────────────
+(function(){
+  const C={ri:'#1a5276',ss:'#c0602a',iot:'#0e7c7b',green:'#22c55e',navy:'#0d1f2d',white:'#ffffff',ink3:'#6a6a66',sal:'#ef4444',collaudo:'#d97706'};
+  const TMAX=36,T_ISAL=18,T_COLL=33;
+  const rows=[
+    {label:'Ricerca Industriale (RI)',type:'hdr',color:C.ri},
+    {label:'T1 · Analisi AS-IS processo',type:'bar',color:C.ri,real:[0,6],del:'D1.1'},
+    {label:'T2 · Modello TO-BE',type:'bar',color:C.ri,real:[3,10],del:'D2.1'},
+    {label:'T3 · Parametri + Schema SQL',type:'bar',color:C.ri,real:[5,14],del:'D3.1'},
+    {label:'T4 · KPI Framework',type:'bar',color:C.ri,real:[7,16],del:'D4.1'},
+    {label:'T5 · Architettura IoT/OPC-UA',type:'bar',color:C.iot,real:[9,18],del:'D5.1'},
+    {label:'T6 · Modelli Predittivi ML',type:'bar',color:C.ri,real:[12,22],del:'D6.1'},
+    {label:'Sviluppo Sperimentale (SS)',type:'hdr',color:C.ss},
+    {label:'T7 · Integrazione JERP↔Cella',type:'bar',color:C.ss,res:[10,22],del:'D7.1'},
+    {label:'T8 · Sistema IoT Saldatura',type:'bar',color:C.iot,res:[14,26],del:'D8.1'},
+    {label:'T9 · Dashboard KPI Analytics',type:'bar',color:C.ss,res:[18,30],del:'D9.1'},
+    {label:'T10 · Validazione + Collaudo',type:'bar',color:C.green,res:[28,36],del:'D10.1 ◆'},
+    {label:'Governance & Dissemination',type:'hdr',color:'#5b2d8e'},
+    {label:'PMO · Rendicontazione SAL',type:'bar',color:'#5b2d8e',res:[0,36],del:'SAL'},
+    {label:'Dissemination · Papers',type:'bar',color:C.green,res:[16,34],del:'≥2 Paper'},
+  ];
+  const LABEL_W=196,PAD_TOP=52,PAD_BOT=30,ROW_H=34;
+  const TOTAL_H=PAD_TOP+rows.length*ROW_H+PAD_BOT;
+  const DPR=Math.min(window.devicePixelRatio||1,2);
+  const canvas=document.getElementById('ganttCanvas');
+  if(!canvas)return;
+  function rr(ctx,x,y,w,h,r){if(w<=0||h<=0)return;r=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
+  function draw(W){
+    const ctx=canvas.getContext('2d');
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    ctx.clearRect(0,0,W,TOTAL_H);
+    const cW=W-LABEL_W-2;
+    const toX=t=>LABEL_W+(t/TMAX)*cW;
+    ctx.fillStyle=C.white;ctx.fillRect(0,0,W,TOTAL_H);
+    // Year headers
+    [{y:'Anno 1',s:0,e:12},{y:'Anno 2',s:12,e:24},{y:'Anno 3',s:24,e:36}].forEach(yr=>{
+      const x1=toX(yr.s),x2=toX(yr.e);
+      ctx.fillStyle=C.navy;ctx.fillRect(x1,PAD_TOP-36,x2-x1-1,14);
+      ctx.fillStyle=C.white;ctx.font='800 8px Montserrat,sans-serif';ctx.textAlign='center';
+      ctx.fillText(yr.y,(x1+x2)/2,PAD_TOP-25);
+    });
+    // Quarter labels
+    for(let q=0;q<12;q++){
+      const x1=toX(q*3),x2=toX((q+1)*3);
+      ctx.fillStyle=q%2===0?'#f0f4f8':'#f8fafc';ctx.fillRect(x1,PAD_TOP-20,x2-x1-1,14);
+      ctx.fillStyle='#6a6a66';ctx.font='500 7.5px Montserrat,sans-serif';ctx.textAlign='center';
+      ctx.fillText('M'+(q*3+1)+'-'+(q*3+3),(x1+x2)/2,PAD_TOP-9);
+    }
+    // Grid
+    for(let q=0;q<=TMAX;q+=3){const x=toX(q);ctx.strokeStyle='#e8ecef';ctx.lineWidth=.8;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(x,PAD_TOP-18);ctx.lineTo(x,TOTAL_H-PAD_BOT);ctx.stroke();}
+    // Rows
+    rows.forEach((row,i)=>{
+      const y=PAD_TOP+i*ROW_H,cy=y+ROW_H/2;
+      if(row.type==='hdr'){ctx.fillStyle=row.color;ctx.fillRect(0,y,W,ROW_H);ctx.fillStyle=C.white;ctx.font='800 9.5px Montserrat,sans-serif';ctx.textAlign='left';ctx.fillText(row.label,8,cy+3.5);return;}
+      ctx.fillStyle=i%2===0?'#fafbfc':C.white;ctx.fillRect(0,y,W,ROW_H);
+      ctx.strokeStyle='#e8ecef';ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(0,y+ROW_H);ctx.lineTo(W,y+ROW_H);ctx.stroke();
+      ctx.font='600 9px Montserrat,sans-serif';ctx.fillStyle='#1a1a18';ctx.textAlign='left';ctx.fillText(row.label,6,cy+3.5);
+      if(row.del){const dw=ctx.measureText(row.del).width+8;ctx.font='700 7.5px Montserrat,sans-serif';ctx.fillStyle=row.color+'22';rr(ctx,LABEL_W-dw-4,cy-7,dw,13,2);ctx.fill();ctx.fillStyle=row.color;ctx.textAlign='center';ctx.fillText(row.del,LABEL_W-dw/2-4,cy+3);ctx.textAlign='left';}
+      const BH=ROW_H*.4,bY=cy-BH/2;
+      if(row.real){const x1=toX(row.real[0]),x2=toX(row.real[1]);if(x2>x1){ctx.fillStyle=row.color;rr(ctx,x1,bY,x2-x1,BH,3);ctx.fill();}}
+      if(row.res){const x1=toX(row.res[0]),x2=toX(row.res[1]);if(x2>x1){ctx.fillStyle=row.color+'38';rr(ctx,x1,bY,x2-x1,BH,3);ctx.fill();ctx.strokeStyle=row.color+'88';ctx.lineWidth=1.2;ctx.setLineDash([3,2]);rr(ctx,x1,bY,x2-x1,BH,3);ctx.stroke();ctx.setLineDash([]);}}
+    });
+    // Milestones
+    [{t:T_ISAL,c:C.sal,lbl:'I SAL'},{t:T_COLL,c:C.collaudo,lbl:'Collaudo'}].forEach(ms=>{
+      const x=toX(ms.t);ctx.strokeStyle=ms.c;ctx.lineWidth=2;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(x,PAD_TOP-18);ctx.lineTo(x,TOTAL_H-PAD_BOT+4);ctx.stroke();
+      ctx.fillStyle=ms.c;ctx.font='800 7px Montserrat,sans-serif';ctx.textAlign='center';ctx.fillText(ms.lbl,x,PAD_TOP-20);
+    });
+    ctx.fillStyle='#6a6a66';ctx.font='400 7px Montserrat,sans-serif';ctx.textAlign='left';ctx.fillText('Piano 36 mesi · RI→SS · Fonte: piano progettuale Tecnomulipast PIA G683TK4',4,TOTAL_H-4);
+    ctx.strokeStyle='#d0d5dc';ctx.lineWidth=1;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(LABEL_W,PAD_TOP-18);ctx.lineTo(LABEL_W,TOTAL_H-PAD_BOT);ctx.stroke();
+  }
+  function resize(){const W=canvas.parentElement.clientWidth||800;canvas.width=W*DPR;canvas.height=TOTAL_H*DPR;canvas.style.height=TOTAL_H+'px';draw(W);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(resize,80));else setTimeout(resize,80);
+  let _t;window.addEventListener('resize',()=>{clearTimeout(_t);_t=setTimeout(resize,100);});
+})();
+
+// ── CHARTS ────────────────────────────────────────
+window.addEventListener('load',()=>{
+  Chart.defaults.font={family:"Montserrat,sans-serif",size:10};
+  Chart.defaults.color='#6a6a66';
+  // Budget pie
+  new Chart(document.getElementById('budgetPieChart'),{
+    type:'doughnut',
+    data:{labels:['2023 (€40k)','2024 (€31k)','2025 (€9k)'],
+      datasets:[{data:[40000,31000,9000],
+        backgroundColor:['#1a5276','#c0602a','#1a6e3a'],
+        borderWidth:3,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:8}},
+        tooltip:{callbacks:{label:ctx=>'€'+ctx.raw.toLocaleString('it-IT')}}}}
+  });
+  // Mix RI/SS chart
+  new Chart(document.getElementById('mixChart'),{
+    type:'bar',
+    data:{labels:['2021','2022','2023','2024','2025'],
+      datasets:[
+        {label:'RI',data:[0,0,24000,11700,0],backgroundColor:'rgba(26,82,118,.8)',borderRadius:3,borderSkipped:false},
+        {label:'SS',data:[0,0,16000,19300,9000],backgroundColor:'rgba(192,96,42,.8)',borderRadius:3,borderSkipped:false}
+      ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{boxWidth:10,font:{size:10}}}},
+      scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,ticks:{callback:v=>'€'+(v/1000)+'k'}}}}
+  });
+});
+
+// ── NAV ACTIVE ─────────────────────────────────────
+const secList=document.querySelectorAll('section[id]');
+const navLks=document.querySelectorAll('.n-lk');
+const navObs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      navLks.forEach(l=>l.classList.remove('a'));
+      const lk=document.querySelector(`.n-lk[href="#${e.target.id}"]`);
+      if(lk)lk.classList.add('a');
+    }
+  });
+},{rootMargin:'-30% 0px -60% 0px'});
+secList.forEach(s=>navObs.observe(s));
+
+// ── REVEAL ─────────────────────────────────────────
+const revObs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('vis');});},{threshold:.05});
+document.querySelectorAll('.rev').forEach(el=>revObs.observe(el));
+
+// ── DETAIL TOGGLE INIT ─────────────────────────────
+document.querySelectorAll('.detail-only').forEach(el=>el.classList.add('hidden'));
+</script>
+</body>
+</html>
